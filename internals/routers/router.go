@@ -10,6 +10,7 @@ func InitRouter(dbpool *pgxpool.Pool) *gin.Engine {
 
 	InitAuthRouter(r, dbpool)
 	InitMovieRouter(r, dbpool)
+	InitUserRouter(r, dbpool)
 
 	return r
 }
