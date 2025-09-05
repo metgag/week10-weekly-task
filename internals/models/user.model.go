@@ -1,0 +1,28 @@
+package models
+
+type UserInf struct {
+	UID         uint16  `db:"user_id" json:"user_id"`
+	FirstName   string  `db:"first_name" json:"first_name"`
+	LastName    string  `db:"last_name" json:"last_name"`
+	PhoneNumber string  `db:"phone_number" json:"phone_number"`
+	PointCount  float32 `db:"point_count" json:"point_count"`
+}
+
+type UserinfResponse struct {
+	Result  UserInf `json:"result"`
+	Success bool    `json:"success"`
+	Error   string  `json:"error"`
+}
+
+type NewInf struct {
+	FirstName   string  `db:"first_name" json:"first_name"`
+	LastName    string  `db:"last_name" json:"last_name"`
+	PhoneNumber string  `db:"phone_number" json:"phone_number"`
+	PointCount  float32 `db:"point_count" json:"point_count"`
+}
+
+type UpdateResponse struct {
+	Result  string `json:"result"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
