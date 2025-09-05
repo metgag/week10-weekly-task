@@ -6,5 +6,9 @@ import (
 )
 
 func InitRouter(dbpool *pgxpool.Pool) *gin.Engine {
-	return gin.Default()
+	r := gin.Default()
+
+	InitAuthRouter(r, dbpool)
+
+	return r
 }
