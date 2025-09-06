@@ -18,27 +18,27 @@ func NewMovieHandler(mr *repositories.MovieRepository) *MovieHandler {
 	return &MovieHandler{mr: mr}
 }
 
-func NewMovieResponse(result []models.Movie, success bool, error string) models.MovieResponse {
+func newMovieResponse(result []models.Movie, success bool, error string) models.MovieResponse {
 	return models.MovieResponse{Result: result, Success: success, Error: error}
 }
 
 func (m *MovieHandler) GetUpcomingMovies(ctx *gin.Context) {
 	movies, err := m.mr.UpcomingMoviesDat(ctx.Request.Context())
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, NewMovieResponse(
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
 			[]models.Movie{}, false, "server unable to get movies",
 		))
 		return
 	}
 
 	if len(movies) == 0 {
-		ctx.JSON(http.StatusNotFound, NewMovieResponse(
+		ctx.JSON(http.StatusNotFound, newMovieResponse(
 			[]models.Movie{}, false, "movies data is empty",
 		))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, NewMovieResponse(
+	ctx.JSON(http.StatusOK, newMovieResponse(
 		movies, true, "",
 	))
 }
@@ -46,20 +46,20 @@ func (m *MovieHandler) GetUpcomingMovies(ctx *gin.Context) {
 func (m *MovieHandler) GetPopularMovies(ctx *gin.Context) {
 	movies, err := m.mr.PopularMoviesDat(ctx.Request.Context())
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, NewMovieResponse(
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
 			[]models.Movie{}, false, "server unable to get movies",
 		))
 		return
 	}
 
 	if len(movies) == 0 {
-		ctx.JSON(http.StatusNotFound, NewMovieResponse(
+		ctx.JSON(http.StatusNotFound, newMovieResponse(
 			[]models.Movie{}, false, "movies data is empty",
 		))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, NewMovieResponse(
+	ctx.JSON(http.StatusOK, newMovieResponse(
 		movies, true, "",
 	))
 }
