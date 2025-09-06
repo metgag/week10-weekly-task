@@ -90,3 +90,29 @@ func (u *UserHandler) HandleUpdateUserInf(ctx *gin.Context) {
 		fmt.Sprintf("updated user w/ ID %d", idParam), true, "",
 	))
 }
+
+func newHistoryResponse(res models.UserOrder, success bool, err string) models.HistoryResponse {
+	return models.HistoryResponse{Result: res, Success: success, Error: err}
+}
+
+func (u *UserHandler) HandleUserOrderHistory(ctx *gin.Context) {
+	idParam, err := strconv.Atoi(ctx.Param("uid"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, newUpdateResponse(
+			"", false, "invalid uid input",
+		))
+		return
+	}
+
+	history, err := u.ur.GetUserOrderHistory(ctx.Request.Context(), idParam)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, newHistoryResponse(
+			models.UserOrder{}, false, "server unable to get user order history",
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newHistoryResponse(
+		history, true, "",
+	))
+}
