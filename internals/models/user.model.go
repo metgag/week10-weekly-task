@@ -26,3 +26,14 @@ type UpdateResponse struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
 }
+
+type UserOrder struct {
+	UID          uint16         `db:"user_id" json:"user_id"`
+	OrderHistory []OrderHistory `db:"order_history" json:"order_history"`
+}
+
+type HistoryResponse struct {
+	Result  UserOrder
+	Success bool
+	Error   string
+}
