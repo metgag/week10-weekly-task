@@ -106,3 +106,43 @@ func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context
 
 	return u.dbpool.Exec(ctx, sql, args...)
 }
+
+func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id int) (models.UserOrder, error) {
+	sql := `
+		SELECT 
+			b.id "order_id", m.title, s.date, t.time, ct.name, b.is_paid
+		FROM
+			book_ticket AS b
+		JOIN
+			users AS u ON b.user_id = u.id
+		JOIN
+			cinema_schedule AS c ON b.schedule_id = c.id
+		JOIN
+			movies AS m ON c.movie_id = m.id
+		JOIN
+			cinema_schedule AS s ON b.schedule_id = s.id
+		JOIN
+			jam_tayang AS t ON s.time_id = t.id
+		JOIN
+			cinema_tayang AS ct ON s.cinema_id = ct.id
+		WHERE
+			u.id = $1
+	`
+	rows, err := u.dbpool.Query(ctx, sql, id)
+	if err != nil {
+		return models.UserOrder{}, err
+	}
+	defer rows.Close()
+
+	var histories []models.OrderHistory
+	for rows.Next() {
+		var history models.OrderHistory
+		if err := rows.Scan(&history.OrderID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.IsPaid); err != nil {
+			return models.UserOrder{}, err
+		}
+
+		histories = append(histories, history)
+	}
+
+	return models.UserOrder{UID: uint16(id), OrderHistory: histories}, nil
+}
