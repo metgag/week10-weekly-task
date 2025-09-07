@@ -11,9 +11,9 @@ func InitCinemaRouter(router *gin.Engine, dbpool *pgxpool.Pool) {
 	cr := repositories.NewCinemaRepository(dbpool)
 	ch := handlers.NewCinemaHandler(cr)
 
-	cinemaRouter := router.Group("/cinema")
+	cinemaRouter := router.Group("/cinemas")
 	{
-		cinemaRouter.GET("/schedule", ch.HandlerSchedule)
+		cinemaRouter.GET("/schedules", ch.HandlerSchedule)
 		cinemaRouter.GET("/seats", ch.HandlerSeats)
 	}
 }
