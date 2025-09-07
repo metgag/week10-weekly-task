@@ -7,7 +7,7 @@ import (
 )
 
 type CinemaSchedule struct {
-	ID         uint16      `db:"id" json:"id"`
+	ID         uint16      `db:"schedule_id" json:"schedule_id"`
 	Title      string      `db:"title" json:"title"`
 	Date       pgtype.Date `db:"date" json:"date"`
 	Time       time.Time   `db:"time" json:"time"`
