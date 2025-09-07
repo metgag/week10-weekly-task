@@ -214,3 +214,37 @@ func (m *MovieRepository) UpdateMovie(newBody models.Movie, ctx context.Context,
 
 	return m.dbpool.Exec(ctx, sql, args...)
 }
+
+func (m *MovieRepository) GetMovieWithGenrePageSearch(q string, limit, offset, genreId int, ctx context.Context) ([]models.MovieGenre, error) {
+	sql := `
+		SELECT 
+			m.id, m.title, mg.genre_id
+		FROM
+			movies AS m
+		JOIN
+			movies_genres AS mg ON m.id = mg.movie_id
+		WHERE
+			mg.genre_id = $1
+		AND
+			m.title ILIKE $2
+		LIMIT $3 OFFSET $4
+	`
+	search := "%" + q + "%"
+	rows, err := m.dbpool.Query(ctx, sql, genreId, search, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []models.MovieGenre
+	for rows.Next() {
+		var movie models.MovieGenre
+		if err := rows.Scan(&movie.ID, &movie.Title, &movie.GenreID); err != nil {
+			return nil, err
+		}
+		log.Println("fofofofoffofofoofofofofoofofofofoff")
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
