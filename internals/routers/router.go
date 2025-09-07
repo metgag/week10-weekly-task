@@ -12,6 +12,7 @@ func InitRouter(dbpool *pgxpool.Pool) *gin.Engine {
 	InitMovieRouter(r, dbpool)
 	InitUserRouter(r, dbpool)
 	InitCinemaRouter(r, dbpool)
+	InitOrderRouter(r, dbpool)
 
 	return r
 }
