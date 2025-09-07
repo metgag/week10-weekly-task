@@ -22,6 +22,14 @@ func newUserinfResponse(res models.UserInf, success bool, err string) models.Use
 	return models.UserinfResponse{Result: res, Success: success, Error: err}
 }
 
+// HandleGetUserProfile godoc
+// @Summary get user profile info based from ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param        id   path      int  true  "user ID"
+// @Success 200 {object} models.UserinfResponse
+// @Router /users/:uid [get]
 func (u *UserHandler) HandleUserinf(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("uid"))
 	if err != nil {
@@ -48,6 +56,15 @@ func newUpdateResponse(res string, success bool, err string) models.UpdateRespon
 	return models.UpdateResponse{Result: res, Success: success, Error: err}
 }
 
+// HandleUpdateUserProfile godoc
+// @Summary update user profile info based from ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param        id   path      int  true  "user ID"
+// @Param request body models.NewInf true "profile update body json content"
+// @Success 200 {object} models.UpdateResponse
+// @Router /users/:uid [patch]
 func (u *UserHandler) HandleUpdateUserInf(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("uid"))
 	if err != nil {
@@ -95,6 +112,14 @@ func newHistoryResponse(res models.UserOrder, success bool, err string) models.H
 	return models.HistoryResponse{Result: res, Success: success, Error: err}
 }
 
+// HandleGetUserOrderHistory godoc
+// @Summary get user order history info based from ID
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param        id   path      int  true  "user ID"
+// @Success 200 {object} models.UpdateResponse
+// @Router /users/:uid/orders [get]
 func (u *UserHandler) HandleUserOrderHistory(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("uid"))
 	if err != nil {
