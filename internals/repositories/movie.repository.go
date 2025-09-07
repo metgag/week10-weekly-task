@@ -216,6 +216,38 @@ func (m *MovieRepository) UpdateMovie(newBody models.Movie, ctx context.Context,
 }
 
 func (m *MovieRepository) GetMovieWithGenrePageSearch(q string, limit, offset, genreId int, ctx context.Context) ([]models.MovieGenre, error) {
+	if genreId != 0 {
+		sql := `
+			SELECT 
+				m.id, m.title, mg.genre_id
+			FROM
+				movies AS m
+			JOIN
+				movies_genres AS mg ON m.id = mg.movie_id
+			WHERE
+				mg.genre_id = $1
+			AND
+				m.title ILIKE $2
+			LIMIT $3 OFFSET $4
+		`
+		search := "%" + q + "%"
+		rows, err := m.dbpool.Query(ctx, sql, genreId, search, limit, offset)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var movies []models.MovieGenre
+		for rows.Next() {
+			var movie models.MovieGenre
+			if err := rows.Scan(&movie.ID, &movie.Title, &movie.GenreID); err != nil {
+				return nil, err
+			}
+			movies = append(movies, movie)
+		}
+
+		return movies, nil
+	}
 	sql := `
 		SELECT 
 			m.id, m.title, mg.genre_id
@@ -223,14 +255,12 @@ func (m *MovieRepository) GetMovieWithGenrePageSearch(q string, limit, offset, g
 			movies AS m
 		JOIN
 			movies_genres AS mg ON m.id = mg.movie_id
-		WHERE
-			mg.genre_id = $1
 		AND
-			m.title ILIKE $2
-		LIMIT $3 OFFSET $4
+			m.title ILIKE $1
+		LIMIT $2 OFFSET $3
 	`
 	search := "%" + q + "%"
-	rows, err := m.dbpool.Query(ctx, sql, genreId, search, limit, offset)
+	rows, err := m.dbpool.Query(ctx, sql, search, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +272,6 @@ func (m *MovieRepository) GetMovieWithGenrePageSearch(q string, limit, offset, g
 		if err := rows.Scan(&movie.ID, &movie.Title, &movie.GenreID); err != nil {
 			return nil, err
 		}
-		log.Println("fofofofoffofofoofofofofoofofofofoff")
 		movies = append(movies, movie)
 	}
 
