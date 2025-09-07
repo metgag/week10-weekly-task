@@ -2,7 +2,11 @@ package repositories
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"reflect"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/metgag/koda-weekly10/internals/models"
 )
@@ -116,4 +120,97 @@ func (m *MovieRepository) MovieDetailsDat(ctx context.Context, id int) (models.M
 	movie.Genres = genres
 
 	return movie, nil
+}
+
+func (m *MovieRepository) GetAllMoviesDat(ctx context.Context) ([]models.Movie, error) {
+	sql := `
+		SELECT
+			id, title, backdrop_path, poster_path, release_date, runtime, overview, director_id, popularity
+		FROM
+			movies
+	`
+	rows, err := m.dbpool.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var movies []models.Movie
+	for rows.Next() {
+		var movie models.Movie
+		if err := rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.BackdropPath,
+			&movie.PosterPath,
+			&movie.ReleaseDate,
+			&movie.Runtime,
+			&movie.Overview,
+			&movie.DirectorID,
+			&movie.Popularity,
+		); err != nil {
+			return nil, err
+		}
+		movies = append(movies, movie)
+	}
+
+	return movies, nil
+}
+
+func (m *MovieRepository) DeleteMovie(ctx context.Context, id int) (pgconn.CommandTag, error) {
+	sqlMovie := `
+		DELETE FROM movies 
+		WHERE id = $1
+	`
+	sqlGetGenre := `
+		SELECT movie_id
+		FROM movies_genres
+		WHERE movie_id = $1
+	`
+	ctagGetGenre, _ := m.dbpool.Exec(ctx, sqlGetGenre, id)
+	log.Println(ctagGetGenre.RowsAffected())
+	if ctagGetGenre.RowsAffected() == 0 {
+		return m.dbpool.Exec(ctx, sqlMovie, id)
+	}
+
+	sqlDeleteGenre := `
+		DELETE FROM movies_genres
+		WHERE movie_id = $1
+	`
+	_, err := m.dbpool.Exec(ctx, sqlDeleteGenre, id)
+	if err != nil {
+		return pgconn.CommandTag{}, err
+	}
+
+	return m.dbpool.Exec(ctx, sqlMovie, id)
+}
+
+func (m *MovieRepository) UpdateMovie(newBody models.Movie, ctx context.Context, id int) (pgconn.CommandTag, error) {
+	rt := reflect.TypeOf(newBody)
+	rv := reflect.ValueOf(newBody)
+
+	var args []any
+	var argIndex int = 1
+
+	sql := "UPDATE movies SET "
+	for i := 0; i < rt.NumField(); i++ {
+		field := rt.Field(i)
+		value := rv.Field(i)
+
+		if value.IsZero() {
+			continue
+		} else {
+			args = append(args, value.Interface())
+		}
+
+		sql += fmt.Sprintf("%s = $%d", field.Tag.Get("db"), argIndex)
+		sql += ", "
+
+		argIndex++
+	}
+
+	sql += fmt.Sprintf(" updated_at = current_timestamp WHERE id = $%d", argIndex)
+	args = append(args, id)
+
+	return m.dbpool.Exec(ctx, sql, args...)
 }
