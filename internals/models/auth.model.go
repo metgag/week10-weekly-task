@@ -10,12 +10,12 @@ type User struct {
 type Register struct {
 	ID       uint16 `db:"id" json:"id"`
 	Email    string `db:"email" json:"email" binding:"required,email"`
-	Password string `db:"password" json:"password" binding:"min=8,containsany=!@#$%^&*,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ"`
+	Password string `db:"password" json:"password" binding:"required,min=8,containsany=!@#$%^&*,containsany=ABCDEFGHIJKLMNOPQRSTUVWXYZ"`
 }
 
 type Login struct {
-	Email    string `db:"email" json:"email"`
-	Password string `db:"password" json:"password"`
+	Email    string `db:"email" json:"email" binding:"required"`
+	Password string `db:"password" json:"password" binding:"required"`
 }
 
 type AuthResponse struct {
