@@ -184,3 +184,42 @@ func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
 		"result":  ctag.String(),
 	})
 }
+
+func (m *MovieHandler) HandleMovieWithGenrePageSearch(ctx *gin.Context) {
+	q := ctx.Query("q")
+	genreId, err := strconv.Atoi(ctx.Query("genre_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, newMovieResponse(
+			nil, false, "invalid movie id query",
+		))
+		return
+	}
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil {
+		page = 1
+	}
+	limit := 4
+	offset := (page - 1) * limit
+
+	movies, err := m.mr.GetMovieWithGenrePageSearch(q, limit, offset, genreId, ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
+			nil, false, "server unable to get movies data",
+		))
+		return
+	}
+	if len(movies) == 0 {
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
+			nil, false, "no matching movie data on the server",
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, struct {
+		Result  []models.MovieGenre `json:"result"`
+		Success bool                `json:"success"`
+	}{
+		movies,
+		true,
+	})
+}
