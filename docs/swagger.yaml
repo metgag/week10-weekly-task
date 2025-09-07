@@ -1,4 +1,569 @@
+definitions:
+  models.AvailSeat:
+    properties:
+      id:
+        example: 32
+        type: integer
+      pos:
+        example: C4
+        type: string
+    type: object
+  models.AvailSeatsResponse:
+    properties:
+      error:
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/models.AvailSeat'
+        type: array
+      success:
+        type: boolean
+    type: object
+  models.CinemaOrder:
+    properties:
+      is_paid:
+        type: boolean
+      payment_method:
+        example: PayPal
+        type: string
+      schedule_id:
+        type: integer
+      total:
+        example: 30
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.CinemaSchedule:
+    properties:
+      cinema_name:
+        example: ebv
+        type: string
+      date:
+        type: string
+      location:
+        example: Bogor
+        type: string
+      schedule_id:
+        type: integer
+      time:
+        type: string
+      title:
+        example: Pulp Fiction
+        type: string
+    type: object
+  models.DeleteMovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        example: movie w/ ID 1 deleted succesfully
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Login:
+    properties:
+      email:
+        example: foo_bar@mail.com
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginResponse:
+    properties:
+      bearer:
+        type: string
+      result:
+        example: logged in as UID 1
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.Movie:
+    properties:
+      backdrop_path:
+        type: string
+      director_id:
+        example: 6
+        type: integer
+      id:
+        example: 680
+        type: integer
+      overview:
+        type: string
+      popularity:
+        example: 17.246
+        type: number
+      poster_path:
+        type: string
+      release_date:
+        example: "1994-09-10"
+        type: string
+      runtime:
+        example: 154
+        type: integer
+      title:
+        example: Pulp Fiction
+        type: string
+    type: object
+  models.MovieDetail:
+    properties:
+      backdrop_path:
+        type: string
+      director_name:
+        example: Quentin Tarantino
+        type: string
+      genres_name:
+        items:
+          type: string
+        type: array
+      id:
+        example: 680
+        type: integer
+      overview:
+        type: string
+      poster_path:
+        type: string
+      release_date:
+        example: "1994-09-10"
+        type: string
+      runtime:
+        example: 154
+        type: integer
+      title:
+        example: Pulp Fiction
+        type: string
+    type: object
+  models.MovieDetailResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.MovieDetail'
+      success:
+        type: boolean
+    type: object
+  models.MovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/models.Movie'
+        type: array
+      success:
+        type: boolean
+    type: object
+  models.NewInf:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        example: "08667728761"
+        type: string
+      point_count:
+        example: 4.8
+        type: number
+    type: object
+  models.OrderResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Register:
+    properties:
+      email:
+        example: foo_bar@mail.com
+        type: string
+      id:
+        type: integer
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.RegisterResponse:
+    properties:
+      error:
+        example: server unable to bind request
+        type: string
+      result:
+        example: 'register succesfully w/ ID: 1'
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.ScheduleResponse:
+    properties:
+      error:
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/models.CinemaSchedule'
+        type: array
+      success:
+        type: boolean
+    type: object
+  models.UpdateMovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        example: movie w/ ID 1 updated succesfully
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.UpdateResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.UserInf:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        example: "08224422765"
+        type: string
+      point_count:
+        example: 4.2
+        type: number
+      user_id:
+        type: integer
+    type: object
+  models.UserinfResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.UserInf'
+      success:
+        type: boolean
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /admin/movies/:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get all movies (admin)
+      tags:
+      - movies
+  /admin/movies/:id:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.DeleteMovieResponse'
+      summary: delete a movie w/ ID
+      tags:
+      - movies
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateMovieResponse'
+      summary: update a movie w/ ID
+      tags:
+      - movies
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: login body json content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful login response
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+      summary: user login handler func
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: register body json content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: successful register response
+          schema:
+            $ref: '#/definitions/models.RegisterResponse'
+      summary: user register handler func
+      tags:
+      - auth
+  /cinemas/schedules:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ScheduleResponse'
+      summary: get cinema schedule handler func
+      tags:
+      - cinemas
+  /cinemas/seats:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AvailSeatsResponse'
+      summary: get cinema available seats handler func
+      tags:
+      - cinemas
+  /movies/:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: search title by q
+        example: gump
+        in: query
+        name: example
+        type: string
+      - description: page number
+        example: 1
+        in: query
+        name: int
+        type: integer
+      - default: 0
+        description: genre_id default
+        in: query
+        name: default
+        type: integer
+      - description: genre_id enums
+        enum:
+        - 27
+        - 53
+        - 12
+        - 14
+        - 28
+        - 80
+        - 18
+        - 878
+        - 35
+        - 10749
+        in: query
+        name: enumint
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get movie with filter by name and genre with pagination
+      tags:
+      - movies
+  /movies/:id:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieDetailResponse'
+      summary: get movie detail handler func
+      tags:
+      - movies
+  /movies/popular:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get popular movies handler func
+      tags:
+      - movies
+  /movies/upcoming:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get upcoming movies handler func
+      tags:
+      - movies
+  /orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: order body json content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CinemaOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+      summary: create user order handler func
+      tags:
+      - orders
+  /users/:uid:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserinfResponse'
+      summary: get user profile info based from ID
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: user ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: profile update body json content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewInf'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateResponse'
+      summary: update user profile info based from ID
+      tags:
+      - users
+  /users/:uid/orders:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: user ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UpdateResponse'
+      summary: get user order history info based from ID
+      tags:
+      - users
 swagger: "2.0"

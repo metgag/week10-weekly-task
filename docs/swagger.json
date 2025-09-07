@@ -3,5 +3,857 @@
     "info": {
         "contact": {}
     },
-    "paths": {}
+    "paths": {
+        "/admin/movies/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get all movies (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies/:id": {
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "delete a movie w/ ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteMovieResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "update a movie w/ ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "user login handler func",
+                "parameters": [
+                    {
+                        "description": "login body json content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful login response",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "user register handler func",
+                "parameters": [
+                    {
+                        "description": "register body json content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Register"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful register response",
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cinemas/schedules": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cinemas"
+                ],
+                "summary": "get cinema schedule handler func",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ScheduleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cinemas/seats": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cinemas"
+                ],
+                "summary": "get cinema available seats handler func",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.AvailSeatsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get movie with filter by name and genre with pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "gump",
+                        "description": "search title by q",
+                        "name": "example",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "page number",
+                        "name": "int",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "genre_id default",
+                        "name": "default",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            27,
+                            53,
+                            12,
+                            14,
+                            28,
+                            80,
+                            18,
+                            878,
+                            35,
+                            10749
+                        ],
+                        "type": "integer",
+                        "description": "genre_id enums",
+                        "name": "enumint",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/:id": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get movie detail handler func",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieDetailResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/popular": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get popular movies handler func",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/upcoming": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get upcoming movies handler func",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "create user order handler func",
+                "parameters": [
+                    {
+                        "description": "order body json content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CinemaOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/:uid": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "get user profile info based from ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserinfResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "update user profile info based from ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "profile update body json content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewInf"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/:uid/orders": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "get user order history info based from ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "user ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.AvailSeat": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 32
+                },
+                "pos": {
+                    "type": "string",
+                    "example": "C4"
+                }
+            }
+        },
+        "models.AvailSeatsResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.AvailSeat"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.CinemaOrder": {
+            "type": "object",
+            "properties": {
+                "is_paid": {
+                    "type": "boolean"
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "PayPal"
+                },
+                "schedule_id": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.CinemaSchedule": {
+            "type": "object",
+            "properties": {
+                "cinema_name": {
+                    "type": "string",
+                    "example": "ebv"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string",
+                    "example": "Bogor"
+                },
+                "schedule_id": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                }
+            }
+        },
+        "models.DeleteMovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "movie w/ ID 1 deleted succesfully"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Login": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "foo_bar@mail.com"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "bearer": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "logged in as UID 1"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "models.Movie": {
+            "type": "object",
+            "properties": {
+                "backdrop_path": {
+                    "type": "string"
+                },
+                "director_id": {
+                    "type": "integer",
+                    "example": 6
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 680
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "popularity": {
+                    "type": "number",
+                    "example": 17.246
+                },
+                "poster_path": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string",
+                    "example": "1994-09-10"
+                },
+                "runtime": {
+                    "type": "integer",
+                    "example": 154
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                }
+            }
+        },
+        "models.MovieDetail": {
+            "type": "object",
+            "properties": {
+                "backdrop_path": {
+                    "type": "string"
+                },
+                "director_name": {
+                    "type": "string",
+                    "example": "Quentin Tarantino"
+                },
+                "genres_name": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 680
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "poster_path": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string",
+                    "example": "1994-09-10"
+                },
+                "runtime": {
+                    "type": "integer",
+                    "example": 154
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                }
+            }
+        },
+        "models.MovieDetailResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.MovieDetail"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.MovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Movie"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.NewInf": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "08667728761"
+                },
+                "point_count": {
+                    "type": "number",
+                    "example": 4.8
+                }
+            }
+        },
+        "models.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Register": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "foo_bar@mail.com"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "models.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "server unable to bind request"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "register succesfully w/ ID: 1"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "models.ScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CinemaSchedule"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UpdateMovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "movie w/ ID 1 updated succesfully"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UpdateResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UserInf": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "08224422765"
+                },
+                "point_count": {
+                    "type": "number",
+                    "example": 4.2
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserinfResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.UserInf"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
 }
