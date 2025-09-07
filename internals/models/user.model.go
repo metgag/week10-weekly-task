@@ -4,8 +4,8 @@ type UserInf struct {
 	UID         uint16  `db:"user_id" json:"user_id"`
 	FirstName   string  `db:"first_name" json:"first_name"`
 	LastName    string  `db:"last_name" json:"last_name"`
-	PhoneNumber string  `db:"phone_number" json:"phone_number"`
-	PointCount  float32 `db:"point_count" json:"point_count"`
+	PhoneNumber string  `db:"phone_number" json:"phone_number" example:"08224422765"`
+	PointCount  float32 `db:"point_count" json:"point_count" example:"4.2"`
 }
 
 type UserinfResponse struct {
@@ -17,8 +17,8 @@ type UserinfResponse struct {
 type NewInf struct {
 	FirstName   string  `db:"first_name" json:"first_name"`
 	LastName    string  `db:"last_name" json:"last_name"`
-	PhoneNumber string  `db:"phone_number" json:"phone_number"`
-	PointCount  float32 `db:"point_count" json:"point_count"`
+	PhoneNumber string  `db:"phone_number" json:"phone_number" example:"08667728761"`
+	PointCount  float32 `db:"point_count" json:"point_count" example:"4.8"`
 }
 
 type UpdateResponse struct {
