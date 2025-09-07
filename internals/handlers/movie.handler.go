@@ -189,10 +189,7 @@ func (m *MovieHandler) HandleMovieWithGenrePageSearch(ctx *gin.Context) {
 	q := ctx.Query("q")
 	genreId, err := strconv.Atoi(ctx.Query("genre_id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, newMovieResponse(
-			nil, false, "invalid movie id query",
-		))
-		return
+		genreId = 0
 	}
 	page, err := strconv.Atoi(ctx.Query("page"))
 	if err != nil {
