@@ -63,8 +63,6 @@ func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Con
 	sql += fmt.Sprintf(" updated_at = current_timestamp WHERE user_id = $%d", argIndex)
 	args = append(args, id)
 
-	fmt.Println(sql)
-
 	return u.dbpool.Exec(ctx, sql, args...)
 }
 
@@ -109,7 +107,7 @@ func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context
 
 func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id int) (models.UserOrder, error) {
 	sql := `
-		SELECT 
+		SELECT
 			b.id "order_id", m.title, s.date, t.time, ct.name, b.is_paid
 		FROM
 			book_ticket AS b
