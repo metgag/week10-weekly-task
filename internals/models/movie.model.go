@@ -37,3 +37,9 @@ type MovieDetailResponse struct {
 	Success bool        `json:"success"`
 	Error   string      `json:"error"`
 }
+
+type MovieGenre struct {
+	ID      uint32 `db:"movie_id" json:"movie_id"`
+	Title   string `db:"title" json:"title"`
+	GenreID uint16 `db:"genre_id" json:"genre_id"`
+}
