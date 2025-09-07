@@ -20,6 +20,14 @@ func newOrderResponse(res string, success bool, err string) models.OrderResponse
 	return models.OrderResponse{Result: res, Success: success, Error: err}
 }
 
+// HandleCreateOrder godoc
+// @Summary create user order handler func
+// @Tags orders
+// @Accept json
+// @Produce json
+// @Param request body models.CinemaOrder true "order body json content"
+// @Success 200 {object} models.OrderResponse
+// @Router /orders [post]
 func (o *OrderHandler) HandleCreateOrder(ctx *gin.Context) {
 	var body models.CinemaOrder
 
