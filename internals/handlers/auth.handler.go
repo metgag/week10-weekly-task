@@ -88,7 +88,22 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, newAuthResponse(
-		"", true, fmt.Sprintf("logged in as UID: %d", user.ID),
-	))
+	claims := pkg.NewJWTClaims(user.ID, user.Role)
+	token, err := claims.GenAccessToken()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, newAuthResponse(
+			"server unable to generate access token", false, "",
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, struct {
+		ID      uint16 `json:"user_id"`
+		Success bool   `json:"success"`
+		Bearer  string `json:"bearer"`
+	}{
+		user.ID,
+		true,
+		token,
+	})
 }
