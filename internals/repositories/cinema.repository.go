@@ -18,7 +18,7 @@ func NewCinemaRepository(dbpool *pgxpool.Pool) *CinemaRepository {
 func (c *CinemaRepository) GetSchedule(ctx context.Context) ([]models.CinemaSchedule, error) {
 	sql := `
 		SELECT 
-			s.id, m.title, s.date, t.time, l.location, c.name "cinema_name"
+			s.id "schedule_id", m.title, s.date, t.time, l.location, c.name "cinema_name"
 		FROM 
 			cinema_schedule AS s
 		JOIN
