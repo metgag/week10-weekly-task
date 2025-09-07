@@ -89,3 +89,98 @@ func (m *MovieHandler) GetMovieDetail(ctx *gin.Context) {
 		detail, true, "",
 	))
 }
+
+func (m *MovieHandler) HandleGetAllMovie(ctx *gin.Context) {
+	movies, err := m.mr.GetAllMoviesDat(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
+			nil, false, "server unable to get list of movies",
+		))
+		return
+	}
+	if len(movies) == 0 {
+		ctx.JSON(http.StatusInternalServerError, newMovieResponse(
+			nil, false, "no movies on the server",
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newMovieResponse(
+		movies, true, "",
+	))
+}
+
+func (m *MovieHandler) HandleDeleteMovie(ctx *gin.Context) {
+	idParam, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "invalid movie id",
+		})
+		return
+	}
+
+	ctag, err := m.mr.DeleteMovie(ctx.Request.Context(), idParam)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "server unable to delete movie",
+		})
+		return
+	}
+
+	if ctag.RowsAffected() == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("no movie w/ id: %d", idParam),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"result":  ctag.String(),
+	})
+}
+
+func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
+	idParam, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "invalid movie id",
+		})
+		return
+	}
+
+	var newBody models.Movie
+	if err := ctx.ShouldBindJSON(&newBody); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "server unable to bind data",
+		})
+		return
+	}
+
+	ctag, err := m.mr.UpdateMovie(newBody, ctx.Request.Context(), idParam)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "server unable to update movie data",
+		})
+		return
+	}
+
+	if ctag.RowsAffected() == 0 {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("unable to make update, no movie w/ ID %d", idParam),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"result":  ctag.String(),
+	})
+}
