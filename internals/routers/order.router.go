@@ -13,7 +13,7 @@ func InitOrderRouter(router *gin.Engine, dbpool *pgxpool.Pool) {
 	oh := handlers.NewOrderHandler(or)
 
 	router.POST("/orders", oh.HandleCreateOrder)
-	router.GET("/orders",
+	router.GET("/admin/orders",
 		middlewares.ValidateToken,
 		middlewares.Access("admin"),
 		oh.HandleGetOrderHistory,
