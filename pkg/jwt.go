@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -19,7 +20,7 @@ func NewJWTClaims(uid uint16, role string) *Claims {
 		UserID: uid,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(10 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(20 * time.Minute)),
 			Issuer:    os.Getenv("JWT_ISSUER"),
 		},
 	}
@@ -45,6 +46,7 @@ func (c *Claims) ValidateToken(token string) error {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
+		log.Println(err.Error())
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return errors.New("token already expired")
 		}
