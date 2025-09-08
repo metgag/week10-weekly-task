@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,7 +30,7 @@ func (u *UserRepository) GetUserinf(ctx context.Context, id int) (models.UserInf
 	`
 
 	var userinf models.UserInf
-	if err := u.dbpool.QueryRow(ctx, sql, id).Scan(&userinf.UID, &userinf.FirstName, &userinf.LastName, &userinf.PhoneNumber, &userinf.PointCount); err != nil {
+	if err := u.dbpool.QueryRow(ctx, sql, uint16(id)).Scan(&userinf.UID, &userinf.FirstName, &userinf.LastName, &userinf.PhoneNumber, &userinf.PointCount); err != nil {
 		return models.UserInf{}, err
 	}
 
@@ -70,37 +71,34 @@ func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context
 	rt := reflect.TypeOf(newUserInf)
 	rv := reflect.ValueOf(newUserInf)
 
+	var fields []string
 	var args []any
-	var argIndex []int
-
-	sql := "INSERT INTO personal_info (user_id, "
 	args = append(args, id)
+	fields = append(fields, "user_id")
+
 	for i := 0; i < rt.NumField(); i++ {
-		field := rt.Field(i)
 		value := rv.Field(i)
+		field := rt.Field(i)
 
 		if value.IsZero() {
 			continue
-		} else {
-			args = append(args, value.Interface())
 		}
 
-		sql += field.Tag.Get("db")
-		sql += ", "
-
-		argIndex = append(argIndex, i+2)
+		fields = append(fields, field.Tag.Get("json"))
+		args = append(args, fmt.Sprintf("%v", value))
 	}
+	sql := fmt.Sprintf("INSERT INTO personal_info (%s)", strings.Join(fields, ", "))
 
-	sql += "updated_at) VALUES ($1, "
-	for i, v := range argIndex {
-		sql += fmt.Sprintf("$%d", v)
-		if i < len(argIndex)-1 {
-			sql += ", "
-		} else {
-			sql += ", current_timestamp"
+	values := " VALUES ($1, "
+	for i := 2; i < len(fields)+1; i++ {
+		values += fmt.Sprintf("$%d", i)
+		if i < len(fields) {
+			values += ", "
 		}
 	}
-	sql += ")"
+	values += ")"
+
+	sql += values
 
 	return u.dbpool.Exec(ctx, sql, args...)
 }
@@ -108,7 +106,7 @@ func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context
 func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id int) (models.UserOrder, error) {
 	sql := `
 		SELECT
-			b.id "order_id", m.title, s.date, t.time, ct.name, b.is_paid
+			b.id "order_id", u.id "user_id", m.title, s.date, t.time, ct.name, b.is_paid
 		FROM
 			book_ticket AS b
 		JOIN
@@ -135,7 +133,7 @@ func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id int) (model
 	var histories []models.OrderHistory
 	for rows.Next() {
 		var history models.OrderHistory
-		if err := rows.Scan(&history.OrderID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.IsPaid); err != nil {
+		if err := rows.Scan(&history.OrderID, &history.UserID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.IsPaid); err != nil {
 			return models.UserOrder{}, err
 		}
 
