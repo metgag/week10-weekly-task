@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -23,12 +24,13 @@ func newMovieResponse(result []models.Movie, success bool, error string) models.
 }
 
 // HandleGetUpcomingMovies godoc
-// @Summary get upcoming movies handler func
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.MovieResponse
-// @Router /movies/upcoming [get]
+//
+//	@Summary	get upcoming movies handler func
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	models.MovieResponse
+//	@Router		/movies/upcoming [get]
 func (m *MovieHandler) GetUpcomingMovies(ctx *gin.Context) {
 	movies, err := m.mr.UpcomingMoviesDat(ctx.Request.Context())
 	if err != nil {
@@ -51,12 +53,13 @@ func (m *MovieHandler) GetUpcomingMovies(ctx *gin.Context) {
 }
 
 // HandleGetPopularMovies godoc
-// @Summary get popular movies handler func
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.MovieResponse
-// @Router /movies/popular [get]
+//
+//	@Summary	get popular movies handler func
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	models.MovieResponse
+//	@Router		/movies/popular [get]
 func (m *MovieHandler) GetPopularMovies(ctx *gin.Context) {
 	movies, err := m.mr.PopularMoviesDat(ctx.Request.Context())
 	if err != nil {
@@ -83,13 +86,14 @@ func NewMovieDetailResponse(res models.MovieDetail, success bool, err string) mo
 }
 
 // HandleGetMovieDetail godoc
-// @Summary get movie detail handler func
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Param        id   path      int  true  "movie ID"
-// @Success 200 {object} models.MovieDetailResponse
-// @Router /movies/:id [get]
+//
+//	@Summary	get movie detail handler func
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Param		id	path		int	true	"movie ID"
+//	@Success	200	{object}	models.MovieDetailResponse
+//	@Router		/movies/{id} [get]
 func (m *MovieHandler) GetMovieDetail(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -113,12 +117,14 @@ func (m *MovieHandler) GetMovieDetail(ctx *gin.Context) {
 }
 
 // HandleGetAllMovies godoc
-// @Summary get all movies (admin)
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.MovieResponse
-// @Router /admin/movies/ [get]
+//
+//	@Summary	get all movies (admin)
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Param		Authorization	header		string	true	"Bearer token"
+//	@Success	200				{object}	models.MovieResponse
+//	@Router		/admin/movies/ [get]
 func (m *MovieHandler) HandleGetAllMovie(ctx *gin.Context) {
 	movies, err := m.mr.GetAllMoviesDat(ctx.Request.Context())
 	if err != nil {
@@ -144,13 +150,15 @@ func newDeleteMovieResponse(success bool, res, err string) models.DeleteMovieRes
 }
 
 // HandleDeleteMovie godoc
-// @Summary delete a movie w/ ID
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Param        id   path      int  true  "movie ID"
-// @Success 200 {object} models.DeleteMovieResponse
-// @Router /admin/movies/:id [delete]
+//
+//	@Summary	delete a movie w/ ID
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Param		Authorization	header		string	true	"Bearer token"
+//	@Param		id				path		int		true	"movie ID"
+//	@Success	200				{object}	models.DeleteMovieResponse
+//	@Router		/admin/movies/{id} [delete]
 func (m *MovieHandler) HandleDeleteMovie(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -185,16 +193,20 @@ func newUpdateMovieResponse(success bool, res, err string) models.DeleteMovieRes
 }
 
 // HandleUpdateMovie godoc
-// @Summary update a movie w/ ID
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Param        id   path      int  true  "movie ID"
-// @Success 200 {object} models.UpdateMovieResponse
-// @Router /admin/movies/:id [patch]
+//
+//	@Summary	update a movie w/ ID
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Param		Authorization	header		string			true	"Bearer token"
+//	@Param		id				path		int				true	"movie ID"
+//	@Param		request			body		models.Movie	true	"movie body json content"
+//	@Success	200				{object}	models.UpdateMovieResponse
+//	@Router		/admin/movies/{id} [patch]
 func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		log.Fatal(err.Error())
 		ctx.JSON(http.StatusBadRequest, newUpdateMovieResponse(
 			false, "", "invalid movie ID",
 		))
@@ -230,16 +242,17 @@ func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
 }
 
 // HandleGetMovieWithGenrePageSearch godoc
-// @Summary get movie with filter by name and genre with pagination
-// @Tags movies
-// @Accept json
-// @Produce json
-// @Param	example    query     string  false  "search title by q" example(gump)
-// @Param   int         query     int        false  "page number"	example(1)
-// @Param   default     query     int     false  "genre_id default"     default(0)
-// @Param   enumint     query     int        false  "genre_id enums"          Enums(27, 53, 12, 14, 28, 80, 18, 878, 35, 10749)
-// @Success 200 {object} models.MovieResponse
-// @Router /movies/ [get]
+//
+//	@Summary	get movie with filter by name and genre with pagination
+//	@Tags		movies
+//	@Accept		json
+//	@Produce	json
+//	@Param		example	query		string	false	"search title by q"	example(gump)
+//	@Param		int		query		int		false	"page number"		example(1)
+//	@Param		default	query		int		false	"genre_id default"	default(0)
+//	@Param		enumint	query		int		false	"genre_id enums"	Enums(27, 53, 12, 14, 28, 80, 18, 878, 35, 10749)
+//	@Success	200		{object}	models.MovieResponse
+//	@Router		/movies/ [get]
 func (m *MovieHandler) HandleMovieWithGenrePageSearch(ctx *gin.Context) {
 	q := ctx.Query("q")
 	genreId, err := strconv.Atoi(ctx.Query("genre_id"))
