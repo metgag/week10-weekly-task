@@ -21,12 +21,13 @@ func newScheduleResponse(res []models.CinemaSchedule, success bool, error string
 }
 
 // HandleCinemaSchedule godoc
-// @Summary get cinema schedule handler func
-// @Tags cinemas
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.ScheduleResponse
-// @Router /cinemas/schedules [get]
+//
+//	@Summary	get cinema schedule handler func
+//	@Tags		cinemas
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	models.ScheduleResponse
+//	@Router		/cinemas/schedules [get]
 func (c *CinemaHandler) HandlerSchedule(ctx *gin.Context) {
 	schedule, err := c.cr.GetSchedule(ctx.Request.Context())
 	if err != nil {
@@ -52,12 +53,13 @@ func newAvailSeatsRepsonse(res []models.AvailSeat, success bool, err string) mod
 }
 
 // HandleCinemaSeats godoc
-// @Summary get cinema available seats handler func
-// @Tags cinemas
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.AvailSeatsResponse
-// @Router /cinemas/seats [get]
+//
+//	@Summary	get cinema available seats handler func
+//	@Tags		cinemas
+//	@Accept		json
+//	@Produce	json
+//	@Success	200	{object}	models.AvailSeatsResponse
+//	@Router		/cinemas/seats [get]
 func (c *CinemaHandler) HandlerSeats(ctx *gin.Context) {
 	seats, err := c.cr.GetAvailSeats(ctx.Request.Context())
 	if err != nil {
