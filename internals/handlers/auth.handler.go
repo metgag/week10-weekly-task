@@ -23,13 +23,14 @@ func newRegisterResponse(err string, success bool, result string) models.Registe
 }
 
 // HandleRegister godoc
-// @Summary user register handler func
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param request body models.Register true "register body json content"
-// @Success 200 {object} models.RegisterResponse "successful register response"
-// @Router /auth/register [post]
+//
+//	@Summary	user register handler func
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		models.Register			true	"register body json content"
+//	@Success	200		{object}	models.RegisterResponse	"successful register response"
+//	@Router		/auth/register [post]
 func (a *AuthHandler) AddUser(ctx *gin.Context) {
 	var body = models.Register{}
 
@@ -68,13 +69,14 @@ func newLoginResponse(res, bearer string, success bool) models.LoginResponse {
 }
 
 // HandleLogin godoc
-// @Summary user login handler func
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param request body models.Login true "login body json content"
-// @Success 200 {object} models.LoginResponse "successful login response"
-// @Router /auth/login [post]
+//
+//	@Summary	user login handler func
+//	@Tags		auth
+//	@Accept		json
+//	@Produce	json
+//	@Param		request	body		models.Login			true	"login body json content"
+//	@Success	200		{object}	models.LoginResponse	"successful login response"
+//	@Router		/auth/login [post]
 func (a *AuthHandler) Login(ctx *gin.Context) {
 	var body = models.Login{}
 
