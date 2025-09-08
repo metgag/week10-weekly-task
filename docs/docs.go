@@ -27,6 +27,15 @@ const docTemplate = `{
                     "movies"
                 ],
                 "summary": "get all movies (admin)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -37,7 +46,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/movies/:id": {
+        "/admin/movies/{id}": {
             "delete": {
                 "consumes": [
                     "application/json"
@@ -50,6 +59,13 @@ const docTemplate = `{
                 ],
                 "summary": "delete a movie w/ ID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "movie ID",
@@ -80,11 +96,27 @@ const docTemplate = `{
                 "summary": "update a movie w/ ID",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "type": "integer",
                         "description": "movie ID",
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "movie body json content",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Movie"
+                        }
                     }
                 ],
                 "responses": {
@@ -270,37 +302,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/movies/:id": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "movies"
-                ],
-                "summary": "get movie detail handler func",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "movie ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.MovieDetailResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/movies/popular": {
             "get": {
                 "consumes": [
@@ -345,6 +346,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/movies/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get movie detail handler func",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieDetailResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/orders": {
             "post": {
                 "consumes": [
@@ -358,6 +390,13 @@ const docTemplate = `{
                 ],
                 "summary": "create user order handler func",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "order body json content",
                         "name": "request",
@@ -378,7 +417,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/:uid": {
+        "/users/": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -392,10 +431,10 @@ const docTemplate = `{
                 "summary": "get user profile info based from ID",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],
@@ -421,10 +460,10 @@ const docTemplate = `{
                 "summary": "update user profile info based from ID",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     },
                     {
@@ -447,7 +486,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/:uid/orders": {
+        "/users/orders": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -461,10 +500,10 @@ const docTemplate = `{
                 "summary": "get user order history info based from ID",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
-                        "name": "id",
-                        "in": "path",
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
                         "required": true
                     }
                 ],

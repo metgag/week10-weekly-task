@@ -268,6 +268,12 @@ paths:
     get:
       consumes:
       - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -278,11 +284,16 @@ paths:
       summary: get all movies (admin)
       tags:
       - movies
-  /admin/movies/:id:
+  /admin/movies/{id}:
     delete:
       consumes:
       - application/json
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: movie ID
         in: path
         name: id
@@ -302,11 +313,22 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: movie ID
         in: path
         name: id
         required: true
         type: integer
+      - description: movie body json content
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Movie'
       produces:
       - application/json
       responses:
@@ -432,7 +454,7 @@ paths:
       summary: get movie with filter by name and genre with pagination
       tags:
       - movies
-  /movies/:id:
+  /movies/{id}:
     get:
       consumes:
       - application/json
@@ -485,6 +507,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: order body json content
         in: body
         name: request
@@ -501,16 +528,16 @@ paths:
       summary: create user order handler func
       tags:
       - orders
-  /users/:uid:
+  /users/:
     get:
       consumes:
       - application/json
       parameters:
-      - description: user ID
-        in: path
-        name: id
+      - description: Bearer token
+        in: header
+        name: Authorization
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -525,11 +552,11 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: user ID
-        in: path
-        name: id
+      - description: Bearer token
+        in: header
+        name: Authorization
         required: true
-        type: integer
+        type: string
       - description: profile update body json content
         in: body
         name: request
@@ -546,16 +573,16 @@ paths:
       summary: update user profile info based from ID
       tags:
       - users
-  /users/:uid/orders:
+  /users/orders:
     get:
       consumes:
       - application/json
       parameters:
-      - description: user ID
-        in: path
-        name: id
+      - description: Bearer token
+        in: header
+        name: Authorization
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
