@@ -17,11 +17,11 @@ type OrderHistory struct {
 }
 
 type CinemaOrder struct {
-	UID           uint16 `db:"user_id" json:"user_id"`
-	ScheduleID    uint16 `db:"schedule_id" json:"schedule_id"`
-	PaymentMethod string `db:"payment_method" json:"payment_method" example:"PayPal"`
-	Total         uint16 `db:"total" json:"total" example:"30"`
-	IsPaid        bool   `db:"is_paid" json:"is_paid"`
+	UID           *uint16 `db:"user_id" json:"user_id"`
+	ScheduleID    uint16  `db:"schedule_id" json:"schedule_id"`
+	PaymentMethod string  `db:"payment_method" json:"payment_method" example:"PayPal"`
+	Total         uint16  `db:"total" json:"total" example:"30"`
+	IsPaid        bool    `db:"is_paid" json:"is_paid"`
 }
 
 type OrderResponse struct {
