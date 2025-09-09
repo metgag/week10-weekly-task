@@ -2,12 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/metgag/koda-weekly10/internals/models"
 	"github.com/metgag/koda-weekly10/internals/repositories"
+	"github.com/metgag/koda-weekly10/pkg"
 )
 
 type OrderHandler struct {
@@ -33,14 +32,8 @@ func newOrderResponse(res string, success bool, err string) models.OrderResponse
 //	@Success	200				{object}	models.OrderResponse
 //	@Router		/orders [post]
 func (o *OrderHandler) HandleCreateOrder(ctx *gin.Context) {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	token := ctx.GetHeader("Authorization")
-
-	parsedToken, _ := jwt.Parse(token, func(t *jwt.Token) (any, error) {
-		return []byte(jwtSecret), nil
-	})
-	claims, _ := parsedToken.Claims.(jwt.MapClaims)
-	uid := claims["user_id"].(float64)
+	claims, _ := ctx.Get("claims")
+	user, _ := claims.(pkg.Claims)
 
 	var body models.CinemaOrder
 
@@ -51,7 +44,7 @@ func (o *OrderHandler) HandleCreateOrder(ctx *gin.Context) {
 		return
 	}
 
-	res, err := o.or.CreateOrder(ctx, body, uid)
+	res, err := o.or.CreateOrder(ctx, body, user.UserID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, newOrderResponse(
 			"", false, "server unable to create order",
