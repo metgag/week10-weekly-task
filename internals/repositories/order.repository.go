@@ -51,7 +51,7 @@ func (o *OrderRepository) GetOrderHistories(ctx context.Context) ([]models.Order
 	return histories, nil
 }
 
-func (o *OrderRepository) CreateOrder(ctx context.Context, body models.CinemaOrder, uid float64) (string, error) {
+func (o *OrderRepository) CreateOrder(ctx context.Context, body models.CinemaOrder, uid uint16) (string, error) {
 	sql := `
 		INSERT INTO
 			book_ticket (user_id, schedule_id, payment_method, total, is_paid)
