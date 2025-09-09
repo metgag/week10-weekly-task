@@ -19,7 +19,7 @@ func NewUserRepository(dbpool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{dbpool: dbpool}
 }
 
-func (u *UserRepository) GetUserinf(ctx context.Context, id int) (models.UserInf, error) {
+func (u *UserRepository) GetUserinf(ctx context.Context, id uint16) (models.UserInf, error) {
 	sql := `
 		SELECT
 			user_id, first_name, last_name, phone_number, point_count
@@ -37,7 +37,7 @@ func (u *UserRepository) GetUserinf(ctx context.Context, id int) (models.UserInf
 	return userinf, nil
 }
 
-func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Context, id int) (pgconn.CommandTag, error) {
+func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Context, id uint16) (pgconn.CommandTag, error) {
 	rt := reflect.TypeOf(newUserInf)
 	rv := reflect.ValueOf(newUserInf)
 
@@ -67,7 +67,7 @@ func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Con
 	return u.dbpool.Exec(ctx, sql, args...)
 }
 
-func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context.Context, id int) (pgconn.CommandTag, error) {
+func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context.Context, id uint16) (pgconn.CommandTag, error) {
 	rt := reflect.TypeOf(newUserInf)
 	rv := reflect.ValueOf(newUserInf)
 
@@ -103,7 +103,7 @@ func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context
 	return u.dbpool.Exec(ctx, sql, args...)
 }
 
-func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id int) (models.UserOrder, error) {
+func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (models.UserOrder, error) {
 	sql := `
 		SELECT
 			b.id "order_id", u.id "user_id", m.title, s.date, t.time, ct.name, b.is_paid
