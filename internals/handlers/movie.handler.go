@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/metgag/koda-weekly10/internals/models"
@@ -105,6 +107,7 @@ func (m *MovieHandler) GetMovieDetail(ctx *gin.Context) {
 
 	detail, err := m.mr.MovieDetailsDat(ctx.Request.Context(), idParam)
 	if err != nil {
+		log.Println("unable to get movie detail: ", err.Error())
 		ctx.JSON(http.StatusInternalServerError, NewMovieDetailResponse(
 			models.MovieDetail{}, false, fmt.Sprintf("server unable to reach movie w/ ID %d", idParam),
 		))
@@ -200,7 +203,7 @@ func newUpdateMovieResponse(success bool, res, err string) models.DeleteMovieRes
 //	@Produce	json
 //	@Param		Authorization	header		string			true	"Bearer token"
 //	@Param		id				path		int				true	"movie ID"
-//	@Param		request			body		models.Movie	true	"movie body json content"
+//	@Param		request			body		models.MovieBody	true	"movie body w/ poster and backdrop"
 //	@Success	200				{object}	models.UpdateMovieResponse
 //	@Router		/admin/movies/{id} [patch]
 func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
@@ -213,16 +216,51 @@ func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
 		return
 	}
 
-	var newBody models.Movie
-	if err := ctx.ShouldBindJSON(&newBody); err != nil {
+	var newBody models.MovieBody
+	if err := ctx.ShouldBind(&newBody); err != nil {
+		log.Println("binding body error: ", err.Error())
 		ctx.JSON(http.StatusInternalServerError, newUpdateMovieResponse(
 			false, "", "server unable to bind body",
 		))
 		return
 	}
 
-	ctag, err := m.mr.UpdateMovie(newBody, ctx.Request.Context(), idParam)
+	bDrop := newBody.NewBackdrop
+	var bDropName string
+	if bDrop != nil {
+		ext := filepath.Ext(bDrop.Filename)
+		filename := fmt.Sprintf("bdrop_%d%s", idParam, ext)
+		location := filepath.Join("public", "backdrop", filename)
+		if err := ctx.SaveUploadedFile(bDrop, location); err != nil {
+			log.Println("err upload movie backdrop: ", err.Error())
+			ctx.JSON(http.StatusBadRequest, newUpdateMovieResponse(
+				false, "", "unable to upload movie backdrop",
+			))
+			return
+		}
+		bDropName = filename
+		// log.Println("====================", filename)
+	}
+	poster := newBody.NewPoster
+	var posterName string
+	if poster != nil {
+		ext := filepath.Ext(poster.Filename)
+		filename := fmt.Sprintf("poster_%d_%d%s", idParam, time.Now().UnixNano(), ext)
+		location := filepath.Join("public", "poster", filename)
+		if err := ctx.SaveUploadedFile(poster, location); err != nil {
+			log.Println("err upload movie poster: ", err.Error())
+			ctx.JSON(http.StatusBadRequest, newUpdateMovieResponse(
+				false, "", "unable to upload movie poster",
+			))
+			return
+		}
+		posterName = filename
+	}
+	// log.Println("====================", newBody)
+
+	ctag, err := m.mr.UpdateMovie(newBody, bDropName, posterName, ctx.Request.Context(), idParam)
 	if err != nil {
+		log.Println("unable update movie to db: ", err.Error())
 		ctx.JSON(http.StatusInternalServerError, newUpdateMovieResponse(
 			false, "", "server unable to update movie",
 		))
