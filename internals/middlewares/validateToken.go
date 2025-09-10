@@ -1,7 +1,9 @@
 package middlewares
 
 import (
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/metgag/koda-weekly10/pkg"
@@ -17,8 +19,8 @@ import (
 // }
 
 func ValidateToken(ctx *gin.Context) {
-	token := ctx.GetHeader("Authorization")
-	if token == "" {
+	bearerToken := ctx.GetHeader("Authorization")
+	if bearerToken == "" {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized,
 			gin.H{
 				"success": false,
@@ -27,8 +29,21 @@ func ValidateToken(ctx *gin.Context) {
 		return
 	}
 
+	splitToken := strings.Split(bearerToken, " ")
+	if len(splitToken) != 2 {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized,
+			gin.H{
+				"success": false,
+				"error":   "token unrecognized",
+			})
+		return
+	}
+
+	token := splitToken[1]
 	var claims pkg.Claims
 	if err := claims.ValidateToken(token); err != nil {
+		log.Printf("%s VALIDATE TOKEN ERROR %s", strings.Repeat("=", 8), strings.Repeat("=", 8))
+		log.Println(err.Error())
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized,
 			gin.H{
 				"success": false,
