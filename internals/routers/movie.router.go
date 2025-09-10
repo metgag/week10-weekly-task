@@ -18,23 +18,4 @@ func InitMovieRouter(router *gin.Engine, dbpool *pgxpool.Pool) {
 		movieRouter.GET("/", mh.HandleMovieWithGenrePageSearch)
 		movieRouter.GET("/:id", mh.GetMovieDetail)
 	}
-
-	// adminRouter := router.Group("/admin/movies")
-	// {
-	// 	adminRouter.GET("/",
-	// 		middlewares.ValidateToken,
-	// 		middlewares.Access("admin"),
-	// 		mh.HandleGetAllMovie,
-	// 	)
-	// 	adminRouter.DELETE("/:id",
-	// 		middlewares.ValidateToken,
-	// 		middlewares.Access("admin"),
-	// 		mh.HandleDeleteMovie,
-	// 	)
-	// 	adminRouter.PATCH("/:id",
-	// 		middlewares.ValidateToken,
-	// 		middlewares.Access("admin"),
-	// 		mh.HandleMovieUpdate,
-	// 	)
-	// }
 }
