@@ -13,15 +13,14 @@ func InitUserRouter(r *gin.Engine, dbpool *pgxpool.Pool) {
 	uh := handlers.NewUserHandler(ur)
 
 	userGroup := r.Group("/users")
+	userGroup.Use(
+		middlewares.ValidateToken,
+		middlewares.Access("general"),
+	)
+
 	{
-		userGroup.GET("/", middlewares.ValidateToken, uh.HandleUserinf)
-		userGroup.PATCH("/",
-			middlewares.ValidateToken,
-			uh.HandleUpdateUserInf,
-		)
-		userGroup.GET("/orders",
-			middlewares.ValidateToken,
-			uh.HandleUserOrderHistory,
-		)
+		userGroup.GET("/", uh.HandleUserinf)
+		userGroup.PATCH("/", uh.HandleUpdateUserInf)
+		userGroup.GET("/orders", uh.HandleUserOrderHistory)
 	}
 }
