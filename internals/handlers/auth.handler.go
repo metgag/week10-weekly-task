@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/metgag/koda-weekly10/internals/models"
 	"github.com/metgag/koda-weekly10/internals/repositories"
+	"github.com/metgag/koda-weekly10/internals/utils"
 	"github.com/metgag/koda-weekly10/pkg"
 )
 
@@ -35,6 +36,7 @@ func (a *AuthHandler) AddUser(ctx *gin.Context) {
 	var body = models.Register{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
+		utils.PrintError("UNABLE TO BIND REGISTER BODY", 4, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to bind request", false, "",
 		))
@@ -45,6 +47,7 @@ func (a *AuthHandler) AddUser(ctx *gin.Context) {
 	p.UseRecommended()
 	encodedHash, err := p.GenerateFromPassword(body.Password)
 	if err != nil {
+		utils.PrintError("UNABLE TO ENCODE PASSWORD", 6, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server error while encoding password", false, "",
 		))
@@ -53,6 +56,7 @@ func (a *AuthHandler) AddUser(ctx *gin.Context) {
 
 	id, err := a.ar.AddNewUser(ctx.Request.Context(), body.Email, encodedHash)
 	if err != nil {
+		utils.PrintError("EMAIL ALREADY REGISTERED", 6, err)
 		ctx.JSON(http.StatusConflict, newRegisterResponse(
 			"duplicate email addresses", false, "",
 		))
@@ -64,8 +68,8 @@ func (a *AuthHandler) AddUser(ctx *gin.Context) {
 	))
 }
 
-func newLoginResponse(res, bearer string, success bool) models.LoginResponse {
-	return models.LoginResponse{Result: res, Success: success, Bearer: bearer}
+func newLoginResponse(res, token string, success bool) models.LoginResponse {
+	return models.LoginResponse{Result: res, Success: success, Token: token}
 }
 
 // HandleLogin godoc
@@ -81,6 +85,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	var body = models.Login{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
+		utils.PrintError("UNABLE TO BIND LOGIN BODY", 4, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to bind request", false, "",
 		))
@@ -89,6 +94,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 
 	user, err := a.ar.GetUser(ctx.Request.Context(), body.Email)
 	if err != nil {
+		utils.PrintError("NO MATCHING USER", 9, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to get user", false, "",
 		))
@@ -98,12 +104,14 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	hc := pkg.NewHashParams()
 	isMatch, err := hc.ComparePasswordAndHash(body.Password, user.Password)
 	if err != nil {
+		utils.PrintError("UNABLE TO COMPARE LOGIN PASSWORD", 4, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to compare password", false, "",
 		))
 		return
 	}
 	if !isMatch {
+		utils.PrintError("INVALID CREDENTIALS", 12, nil)
 		ctx.JSON(http.StatusBadRequest, newRegisterResponse(
 			"invalid email or password", false, "",
 		))
@@ -113,6 +121,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	claims := pkg.NewJWTClaims(user.ID, user.Role)
 	token, err := claims.GenAccessToken()
 	if err != nil {
+		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 4, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to generate access token", false, "",
 		))
