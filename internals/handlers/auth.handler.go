@@ -32,11 +32,11 @@ func newRegisterResponse(err string, success bool, result string) models.Registe
 //	@Param		request	body		models.Register			true	"register body json content"
 //	@Success	200		{object}	models.RegisterResponse	"successful register response"
 //	@Router		/auth/register [post]
-func (a *AuthHandler) AddUser(ctx *gin.Context) {
+func (a *AuthHandler) HandleRegister(ctx *gin.Context) {
 	var body = models.Register{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		utils.PrintError("UNABLE TO BIND REGISTER BODY", 4, err)
+		utils.PrintError("UNABLE TO BIND REGISTER BODY", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to bind request", false, "",
 		))
@@ -47,16 +47,16 @@ func (a *AuthHandler) AddUser(ctx *gin.Context) {
 	p.UseRecommended()
 	encodedHash, err := p.GenerateFromPassword(body.Password)
 	if err != nil {
-		utils.PrintError("UNABLE TO ENCODE PASSWORD", 6, err)
+		utils.PrintError("UNABLE TO ENCODE PASSWORD", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server error while encoding password", false, "",
+			"server error while encode password", false, "",
 		))
 		return
 	}
 
 	id, err := a.ar.AddNewUser(ctx.Request.Context(), body.Email, encodedHash)
 	if err != nil {
-		utils.PrintError("EMAIL ALREADY REGISTERED", 6, err)
+		utils.PrintError("EMAIL ALREADY REGISTERED", 12, err)
 		ctx.JSON(http.StatusConflict, newRegisterResponse(
 			"duplicate email addresses", false, "",
 		))
@@ -81,11 +81,11 @@ func newLoginResponse(res, token string, success bool) models.LoginResponse {
 //	@Param		request	body		models.Login			true	"login body json content"
 //	@Success	200		{object}	models.LoginResponse	"successful login response"
 //	@Router		/auth/login [post]
-func (a *AuthHandler) Login(ctx *gin.Context) {
+func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 	var body = models.Login{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		utils.PrintError("UNABLE TO BIND LOGIN BODY", 4, err)
+		utils.PrintError("UNABLE TO BIND LOGIN BODY", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to bind request", false, "",
 		))
@@ -94,7 +94,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 
 	user, err := a.ar.GetUser(ctx.Request.Context(), body.Email)
 	if err != nil {
-		utils.PrintError("NO MATCHING USER", 9, err)
+		utils.PrintError("NO MATCHING USER", 12, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to get user", false, "",
 		))
@@ -104,7 +104,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	hc := pkg.NewHashParams()
 	isMatch, err := hc.ComparePasswordAndHash(body.Password, user.Password)
 	if err != nil {
-		utils.PrintError("UNABLE TO COMPARE LOGIN PASSWORD", 4, err)
+		utils.PrintError("UNABLE TO COMPARE LOGIN PASSWORD", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to compare password", false, "",
 		))
@@ -121,7 +121,7 @@ func (a *AuthHandler) Login(ctx *gin.Context) {
 	claims := pkg.NewJWTClaims(user.ID, user.Role)
 	token, err := claims.GenAccessToken()
 	if err != nil {
-		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 4, err)
+		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 12, err)
 		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
 			"server unable to generate access token", false, "",
 		))
