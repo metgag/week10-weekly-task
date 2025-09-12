@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -67,42 +67,6 @@ func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Con
 	return u.dbpool.Exec(ctx, sql, args...)
 }
 
-func (u *UserRepository) InitUpdateUserinf(newUserInf models.NewInf, ctx context.Context, id uint16) (pgconn.CommandTag, error) {
-	rt := reflect.TypeOf(newUserInf)
-	rv := reflect.ValueOf(newUserInf)
-
-	var fields []string
-	var args []any
-	args = append(args, id)
-	fields = append(fields, "user_id")
-
-	for i := 0; i < rt.NumField(); i++ {
-		value := rv.Field(i)
-		field := rt.Field(i)
-
-		if value.IsZero() {
-			continue
-		}
-
-		fields = append(fields, field.Tag.Get("json"))
-		args = append(args, fmt.Sprintf("%v", value))
-	}
-	sql := fmt.Sprintf("INSERT INTO personal_info (%s)", strings.Join(fields, ", "))
-
-	values := " VALUES ($1, "
-	for i := 2; i < len(fields)+1; i++ {
-		values += fmt.Sprintf("$%d", i)
-		if i < len(fields) {
-			values += ", "
-		}
-	}
-	values += ")"
-
-	sql += values
-
-	return u.dbpool.Exec(ctx, sql, args...)
-}
-
 func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (models.UserOrder, error) {
 	sql := `
 		SELECT
@@ -141,4 +105,35 @@ func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (mo
 	}
 
 	return models.UserOrder{UID: uint16(id), OrderHistory: histories}, nil
+}
+
+func (u *UserRepository) UpdateUserPassword(ctx context.Context, newPassword string, id uint16) (pgconn.CommandTag, error) {
+	sql := `
+		UPDATE users 
+		SET password = $1
+		WHERE id = $2
+	`
+
+	ctag, err := u.dbpool.Exec(ctx, sql, newPassword, id)
+	if err != nil {
+		return pgconn.CommandTag{}, err
+	}
+
+	if !ctag.Update() {
+		return pgconn.CommandTag{}, errors.New("unable to update user profile table")
+	}
+
+	return u.fixUpdateAt(ctx, id)
+}
+
+func (u *UserRepository) fixUpdateAt(ctx context.Context, id uint16) (pgconn.CommandTag, error) {
+	sql := `
+		UPDATE
+			personal_info
+		SET
+			updated_at = current_timestamp
+		WHERE
+			user_id = $1
+	`
+	return u.dbpool.Exec(ctx, sql, id)
 }
