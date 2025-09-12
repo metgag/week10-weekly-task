@@ -3,8 +3,10 @@ package repositories
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/metgag/koda-weekly10/internals/models"
 )
@@ -28,6 +30,12 @@ func (a *AuthRepository) AddNewUser(ctx context.Context, email, password string)
 		return 0, err
 	}
 
+	ctag, err := a.initUserProfile(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	log.Printf("%s: USER PROFILE", ctag.String())
+
 	return id, nil
 }
 
@@ -47,4 +55,14 @@ func (a *AuthRepository) GetUser(ctx context.Context, email string) (models.User
 	}
 
 	return user, nil
+}
+
+func (a *AuthRepository) initUserProfile(ctx context.Context, id uint16) (pgconn.CommandTag, error) {
+	sql := `
+		INSERT INTO 
+			personal_info (user_id)
+		VALUES
+			($1)
+	`
+	return a.dbpool.Exec(ctx, sql, id)
 }
