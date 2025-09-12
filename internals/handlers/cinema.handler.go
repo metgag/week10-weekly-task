@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/metgag/koda-weekly10/internals/models"
 	"github.com/metgag/koda-weekly10/internals/repositories"
+	"github.com/metgag/koda-weekly10/internals/utils"
 )
 
 type CinemaHandler struct {
@@ -31,12 +32,14 @@ func newScheduleResponse(res []models.CinemaSchedule, success bool, error string
 func (c *CinemaHandler) HandlerSchedule(ctx *gin.Context) {
 	schedule, err := c.cr.GetSchedule(ctx.Request.Context())
 	if err != nil {
+		utils.PrintError("CINEMA SCHEDULE SERVER ERROR", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newScheduleResponse(
 			nil, false, "server unable to get cinema schedule",
 		))
 	}
 
 	if len(schedule) == 0 {
+		utils.PrintError("NO CINEMA SCHEDULES", 12, nil)
 		ctx.JSON(http.StatusNoContent, newScheduleResponse(
 			[]models.CinemaSchedule{}, true, "cinema schedules is empty",
 		))
@@ -63,6 +66,7 @@ func newAvailSeatsRepsonse(res []models.AvailSeat, success bool, err string) mod
 func (c *CinemaHandler) HandlerSeats(ctx *gin.Context) {
 	seats, err := c.cr.GetAvailSeats(ctx.Request.Context())
 	if err != nil {
+		utils.PrintError("CINEMA AVAIL SEATS SERVER ERROR", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newAvailSeatsRepsonse(
 			nil, false, "server unable to get available seats",
 		))
@@ -70,8 +74,9 @@ func (c *CinemaHandler) HandlerSeats(ctx *gin.Context) {
 	}
 
 	if len(seats) == 0 {
+		utils.PrintError("NO SEATS LEFT", 12, nil)
 		ctx.JSON(http.StatusNoContent, newAvailSeatsRepsonse(
-			[]models.AvailSeat{}, true, "there is available seat",
+			[]models.AvailSeat{}, true, "there is no available seat",
 		))
 		return
 	}
