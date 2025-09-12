@@ -13,7 +13,7 @@ func InitAuthRouter(router *gin.Engine, dbpool *pgxpool.Pool) {
 
 	authRouter := router.Group("/auth")
 	{
-		authRouter.POST("/register", ah.AddUser)
-		authRouter.POST("/login", ah.Login)
+		authRouter.POST("/register", ah.HandleRegister)
+		authRouter.POST("/login", ah.HandleLogin)
 	}
 }
