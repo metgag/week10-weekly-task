@@ -25,13 +25,16 @@ func newRegisterResponse(err string, success bool, result string) models.Registe
 
 // HandleRegister godoc
 //
-//	@Summary	user register handler func
-//	@Tags		auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		request	body		models.Register			true	"register body json content"
-//	@Success	200		{object}	models.RegisterResponse	"successful register response"
-//	@Router		/auth/register [post]
+//	@Summary		Register new user
+//	@Description	Register a new user with email and password
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		models.Register			true	"User registration request body"
+//	@Success		200		{object}	models.RegisterResponse	"Successfully registered"
+//	@Failure		409		{object}	models.RegisterResponse	"Email already registered"
+//	@Failure		500		{object}	models.RegisterResponse	"Internal server error"
+//	@Router			/auth/register [post]
 func (a *AuthHandler) HandleRegister(ctx *gin.Context) {
 	var body = models.Register{}
 
@@ -74,13 +77,16 @@ func newLoginResponse(res, token string, success bool) models.LoginResponse {
 
 // HandleLogin godoc
 //
-//	@Summary	user login handler func
-//	@Tags		auth
-//	@Accept		json
-//	@Produce	json
-//	@Param		request	body		models.Login			true	"login body json content"
-//	@Success	200		{object}	models.LoginResponse	"successful login response"
-//	@Router		/auth/login [post]
+//	@Summary		User login
+//	@Description	Authenticates user by verifying email and password. Returns a JWT access token upon success.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		models.Login			true	"User login request body"
+//	@Success		200		{object}	models.LoginResponse	"Login successful with JWT token"
+//	@Failure		400		{object}	models.LoginResponse	"Invalid email or password"
+//	@Failure		500		{object}	models.LoginResponse	"Internal server error"
+//	@Router			/auth/login [post]
 func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 	var body = models.Login{}
 
@@ -118,7 +124,7 @@ func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	claims := pkg.NewJWTClaims(user.ID, user.Role)
+	claims := pkg.NewJWTClaims(user.ID, user.Password, user.Role)
 	token, err := claims.GenAccessToken()
 	if err != nil {
 		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 12, err)
