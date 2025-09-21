@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"errors"
-	"log"
 	"os"
 	"time"
 
@@ -10,18 +9,25 @@ import (
 )
 
 type Claims struct {
-	UserID uint16 `json:"user_id"`
-	Role   string `json:"role"`
+	UserID   uint16 `json:"user_id"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func NewJWTClaims(uid uint16, role string) *Claims {
+func NewJWTClaims(uid uint16, email, password, role string) *Claims {
+	now := time.Now()
+
 	return &Claims{
-		UserID: uid,
-		Role:   role,
+		UserID:   uid,
+		Email:    email,
+		Password: password,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(20 * time.Minute)),
 			Issuer:    os.Getenv("JWT_ISSUER"),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(60 * time.Minute)),
 		},
 	}
 }
@@ -46,19 +52,18 @@ func (c *Claims) ValidateToken(token string) error {
 		return []byte(jwtSecret), nil
 	})
 	if err != nil {
-		log.Println(err.Error())
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return errors.New("token already expired")
-		}
-		return errors.New("unable to parsing access token")
+		return err
+	}
+	if !parsedToken.Valid {
+		return jwt.ErrTokenExpired
 	}
 
 	iss, err := parsedToken.Claims.GetIssuer()
 	if err != nil {
-		return errors.New("unable to get issuer")
+		return err
 	}
 	if iss != os.Getenv("JWT_ISSUER") {
-		return errors.New("access token mismatch")
+		return jwt.ErrTokenInvalidIssuer
 	}
 
 	return nil
