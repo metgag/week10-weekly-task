@@ -4,6 +4,7 @@ jobs:
     tickitz_api_publish:
         runs-on: ubuntu-22.04
         steps:
+            - run: echo "Building image for ${{ github.repository }}."
             - name: Checkout repository code
               uses: actions/checkout@v5
             - name: Build and publish a Docker image for ${{ github.repository }}
