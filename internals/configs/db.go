@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 )
 
 func InitDB() (*pgxpool.Pool, error) {
-	return pgxpool.New(context.Background(), os.Getenv("DB_URL"))
+	return pgxpool.New(context.Background(), os.Getenv("DB_URL_M"))
 }
 
 func PingDB(p *pgxpool.Pool) error {
