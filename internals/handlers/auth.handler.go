@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/metgag/koda-weekly10/internals/models"
@@ -124,7 +126,7 @@ func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 		return
 	}
 
-	claims := pkg.NewJWTClaims(user.ID, user.Password, user.Role)
+	claims := pkg.NewJWTClaims(user.ID, user.Email, user.Password, user.Role)
 	token, err := claims.GenAccessToken()
 	if err != nil {
 		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 12, err)
@@ -135,6 +137,45 @@ func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, newLoginResponse(
-		fmt.Sprintf("logged in as UID %d", claims.UserID), token, true,
+		fmt.Sprintf("%d", claims.UserID), token, true,
+	))
+}
+
+func newLogoutResponse(res, err string, success bool) models.LogoutResponse {
+	return models.LogoutResponse{Result: res, Success: success, Error: err}
+}
+
+// HandleLogout godoc
+//
+//	@Summary		Logout user
+//	@Description	Logout user with blacklist to redis
+//	@Tags			auth
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	models.LogoutResponse
+//
+// // @Failure      500  {object}  models.LogoutResponse
+//
+//	@Router			/auth/logout [delete]
+func (a *AuthHandler) HandleLogout(ctx *gin.Context) {
+	token := ctx.GetHeader("Authorization")
+	claims, _ := ctx.Get("claims")
+	user, _ := claims.(pkg.Claims)
+
+	// token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.Split(token, " ")[1]
+
+	err := a.ar.SetLogoutCache(ctx.Request.Context(), token, user.IssuedAt.Time)
+	if err != nil {
+		log.Println("SetLogoutCache error:", err.Error())
+		ctx.JSON(http.StatusInternalServerError, newLogoutResponse(
+			"", "SERVER ERROR WHILE LOG OUT", false,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, newLogoutResponse(
+		"logout succesfully", "", true,
 	))
 }
