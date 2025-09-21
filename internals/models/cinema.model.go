@@ -14,18 +14,30 @@ type CinemaSchedule struct {
 }
 
 type ScheduleResponse struct {
-	Result  []CinemaSchedule
-	Success bool
-	Error   string
+	Result  []CinemaSchedule `json:"schedules,omitempty"`
+	Success bool             `json:"success" example:"true"`
+	Error   string           `json:"message,omitempty"`
 }
 
-type AvailSeat struct {
+type Seat struct {
 	ID  uint8  `db:"id" json:"id" example:"32"`
 	Pos string `db:"pos" json:"pos" example:"C4"`
 }
 
 type AvailSeatsResponse struct {
-	Result  []AvailSeat
-	Success bool
-	Error   string
+	Result  []Seat `json:"result"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
+type CinemaAndTime struct {
+	CinemaName string `json:"cinema_name"`
+	Time       string `json:"time"`
+	CinemaImg  string `json:"cinema_img"`
+}
+
+type CinemaAndTimeResponse struct {
+	Result  CinemaAndTime `json:"result"`
+	Success bool          `json:"success"`
+	Error   string        `json:"error"`
 }
