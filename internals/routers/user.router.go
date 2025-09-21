@@ -6,16 +6,17 @@ import (
 	"github.com/metgag/koda-weekly10/internals/handlers"
 	"github.com/metgag/koda-weekly10/internals/middlewares"
 	"github.com/metgag/koda-weekly10/internals/repositories"
+	"github.com/redis/go-redis/v9"
 )
 
-func InitUserRouter(r *gin.Engine, dbpool *pgxpool.Pool) {
+func InitUserRouter(r *gin.Engine, dbpool *pgxpool.Pool, rdb *redis.Client) {
 	ur := repositories.NewUserRepository(dbpool)
 	uh := handlers.NewUserHandler(ur)
 
 	userGroup := r.Group("/users")
 	userGroup.Use(
-		middlewares.ValidateToken,
-		middlewares.Access("general"),
+		middlewares.ValidateToken(rdb),
+		middlewares.Access("user"),
 	)
 
 	{
