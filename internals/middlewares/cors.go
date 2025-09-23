@@ -11,6 +11,7 @@ func CORSMiddleware(ctx *gin.Context) {
 	// allowed pages
 	whitelist := []string{
 		"http://localhost:5173",
+		"http://localhost:6096",
 	}
 
 	// curr origin
