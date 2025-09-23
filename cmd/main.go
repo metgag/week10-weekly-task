@@ -51,5 +51,5 @@ func main() {
 	defer rdb.Close()
 
 	router := routers.InitRouter(dbpool, rdb)
-	router.Run("localhost:6011")
+	router.Run(":6011")
 }
