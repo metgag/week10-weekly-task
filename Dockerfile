@@ -5,7 +5,7 @@ WORKDIR /build
 RUN apk add --no-cache git
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod tidy
 
 COPY . .
 
@@ -14,6 +14,8 @@ RUN go build -o server ./cmd/main.go
 FROM alpine:3.22
 
 WORKDIR /app
+
+RUN apk update && apk upgrade
 
 COPY --from=builder /build/server ./server
 
