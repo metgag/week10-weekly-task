@@ -5,13 +5,14 @@ jobs:
   tickitz_api_publish:
     runs-on: ubuntu-22.04
     steps:
-      - run: echo "Building image for ${{ github.repository }}."
-
       - name: Checkout repository code
         uses: actions/checkout@v5
 
-      - name: Build and publish a Docker image for ${{ github.repository }}
-        uses: macbre/push-to-ghcr@master
+      - name: Build and publish image
+        uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          image_name: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          image: loket-be
+          tags: v${{github.run_number}}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
