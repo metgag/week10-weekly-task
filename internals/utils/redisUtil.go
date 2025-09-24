@@ -3,41 +3,47 @@ package utils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func GetRedisCache(rdb *redis.Client, ctx context.Context, key string, v any) error {
-	rcmd := rdb.Get(ctx, key)
-	if rcmd.Err() != nil {
-		if rcmd.Err() != redis.Nil {
-			PrintError("redis> SERVER ERROR", 16, rcmd.Err())
-		}
-	} else {
-		// konversi menjadi tipe data []byte
-		bites, err := rcmd.Bytes()
-		if err != nil {
-			PrintError("INTERNAL SERVER ERROR", 12, err)
-		} else {
-			if err := json.Unmarshal(bites, &v); err != nil {
-				PrintError("UNABLE TO PARSE", 16, err)
-			}
-		}
+func CacheGet(rdb *redis.Client, ctx context.Context, key string, result any) (bool, error) {
+	val, err := rdb.Get(ctx, key).Result()
+	if err == redis.Nil {
+		return false, fmt.Errorf("redis> KEY %s DOES NOT EXIST", key)
+	} else if err != nil {
+		return false, fmt.Errorf("redis> INTERNAL SERVER ERROR\n%s", err)
 	}
 
-	return rcmd.Err()
+	if err := json.Unmarshal([]byte(val), result); err != nil {
+		return false, err
+	}
+
+	PrintError(
+		fmt.Sprintf("redis> CACHE HIT %s", key), 20, nil,
+	)
+	return true, nil
 }
 
-func RedisCache(rdb *redis.Client, ctx context.Context, key string, v any, expiration time.Duration) {
-	bites, err := json.Marshal(v)
+func CacheSet(rdb *redis.Client, ctx context.Context, key string, value any, expiration time.Duration) error {
+	jsonData, err := json.Marshal(value)
 	if err != nil {
-		PrintError("redis> UNABLE TO PARSE KEY", 16, err)
+		return err
 	}
 
-	if err := rdb.Set(ctx, key, bites, expiration).Err(); err != nil {
-		PrintError("redis> UNABLE TO SET KEY", 20, err)
-	}
+	PrintError(
+		fmt.Sprintf("redis> CACHE SET %s", key), 20, nil,
+	)
+	return rdb.Set(ctx, key, jsonData, expiration).Err()
+}
 
-	PrintError("redis> SET KEY SUCCESS", 20, nil)
+func InvalidateCache(rdb *redis.Client, ctx context.Context, key string) error {
+	if err := rdb.Del(ctx, key).Err(); err != nil {
+		PrintError(
+			fmt.Sprintf("redis> ERROR INVALIDATE %s", key), 20, nil)
+		return err
+	}
+	return nil
 }
