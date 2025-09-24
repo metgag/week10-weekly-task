@@ -13,7 +13,7 @@ func InitDB() (*pgxpool.Pool, error) {
 	pwd := os.Getenv("DB_PWD")
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
-	db := os.Getenv("DB_NAME_M")
+	db := os.Getenv("DB_NAME")
 
 	connstring := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s", user, pwd, host, port, db,
