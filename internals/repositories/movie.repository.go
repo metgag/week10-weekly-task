@@ -114,6 +114,11 @@ func (m *MovieRepository) UpdateMovie(
 	ctx context.Context,
 	id int,
 ) (pgconn.CommandTag, error) {
+	tx, err := m.dbpool.Begin(ctx)
+	if err != nil {
+		return pgconn.CommandTag{}, err
+	}
+
 	rt := reflect.TypeOf(newBody)
 	rv := reflect.ValueOf(newBody)
 
@@ -154,7 +159,7 @@ func (m *MovieRepository) UpdateMovie(
 	sql := fmt.Sprintf("UPDATE movies SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIndex)
 	args = append(args, id)
 
-	return m.dbpool.Exec(ctx, sql, args...)
+	return tx.Exec(ctx, sql, args...)
 }
 
 func (m *MovieRepository) GetMovieWithGenrePageSearch(ctx context.Context, q, genreName string, limit, offset int) ([]models.MovieFilter, error) {
@@ -231,42 +236,75 @@ func (m *MovieRepository) SoftDeleteMovie(ctx context.Context, movieId int) (pgc
 }
 
 func (m *MovieRepository) GetPopularMovies(ctx context.Context) ([]models.MovieFilter, error) {
-	redisKey := "archie:movies_popular"
-	var upcomings []models.MovieFilter
+	redisKey := "archie:movies_populars"
+	var populars []models.MovieFilter
 
-	if err := utils.GetRedisCache(m.rdb, ctx, redisKey, &upcomings); err == nil {
-		utils.PrintError("redis> CACHE HIT POPULAR MOVIE", 12, nil)
-		return upcomings, nil
-	} else if err != redis.Nil {
-		utils.PrintError("redis> SERVER ERROR", 16, err)
+	isExist, err := utils.CacheGet(m.rdb, ctx, redisKey, &populars)
+	if err != nil {
+		utils.PrintError("redis> REDIS ERROR", 20, err)
+	}
+	if isExist {
+		return populars, nil
 	}
 
-	populars, err := m.GetAllMovies(ctx, `
-		AND
-			popularity > 40
-	`)
+	sql := `
+		SELECT m.id, m.title, m.poster_path, m.release_date
+		FROM orders o
+		JOIN schedule s ON s.id = o.schedule_id
+		JOIN movies m ON m.id = s.movie_id
+		GROUP BY m.id, m.title, m.poster_path, m.release_date
+		ORDER BY COUNT(m.id) DESC
+	`
+
+	rows, err := m.dbpool.Query(ctx, sql)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var movie models.MovieFilter
+		if err := rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.PosterPath,
+			&movie.ReleaseDate,
+		); err != nil {
+			return nil, err
+		}
+
+		genres, err := m.fetchGenres(ctx, int(movie.ID))
+		if err != nil {
+			return nil, err
+		}
+
+		movie.Genres = append(movie.Genres, genres...)
+		populars = append(populars, movie)
+	}
 
 	expiration := 24 * time.Hour
-	utils.RedisCache(m.rdb, ctx, redisKey, populars, expiration)
+	if err := utils.CacheSet(m.rdb, ctx, redisKey, populars, expiration); err != nil {
+		utils.PrintError(
+			fmt.Sprintf("redis> UNABLE TO SET %s", redisKey), 20, err,
+		)
+	}
 
 	return populars, nil
 }
 
 func (m *MovieRepository) GetUpcomingMovies(ctx context.Context) ([]models.MovieFilter, error) {
-	redisKey := "archie:movies_upcoming"
-	// var upcomings []models.MovieFilter
+	redisKey := "archie:movies_upcomings"
+	var upcomings []models.MovieFilter
 
-	// if err := utils.GetRedisCache(m.rdb, ctx, redisKey, &upcomings); err == nil {
-	// 	utils.PrintError("redis> CACHE HIT UPCOMING MOVIE", 12, nil)
-	// 	return upcomings, nil
-	// } else if err != redis.Nil {
-	// 	utils.PrintError("redis> SERVER ERROR", 16, err)
-	// }
+	isExist, err := utils.CacheGet(m.rdb, ctx, redisKey, &upcomings)
+	if err != nil {
+		utils.PrintError("redis> REDIS ERROR", 20, err)
+	}
+	if isExist {
+		return upcomings, nil
+	}
 
-	upcomings, err := m.GetAllMovies(ctx, `
+	upcomings, err = m.GetAllMovies(ctx, `
 		WHERE release_date + INTERVAL '1 months' > CURRENT_DATE
 	`)
 	if err != nil {
@@ -274,7 +312,11 @@ func (m *MovieRepository) GetUpcomingMovies(ctx context.Context) ([]models.Movie
 	}
 
 	expiration := 24 * time.Hour
-	utils.RedisCache(m.rdb, ctx, redisKey, upcomings, expiration)
+	if err := utils.CacheSet(m.rdb, ctx, redisKey, upcomings, expiration); err != nil {
+		utils.PrintError(
+			fmt.Sprintf("redis> UNABLE TO SET %s", redisKey), 20, err,
+		)
+	}
 
 	return upcomings, nil
 }
