@@ -13,7 +13,7 @@ func InitAuthRouter(router *gin.Engine, dbpool *pgxpool.Pool, rdb *redis.Client)
 	ar := repositories.NewAuthRepository(dbpool, rdb)
 	ah := handlers.NewAuthHandler(ar)
 
-	authRouter := router.Group("api/auth")
+	authRouter := router.Group("auth")
 	{
 		authRouter.POST("/register", ah.HandleRegister)
 		authRouter.POST("/login", ah.HandleLogin)

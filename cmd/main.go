@@ -38,7 +38,7 @@ func main() {
 	if err := config.PingDB(dbpool); err != nil {
 		fmt.Fprintf(os.Stderr, "unable to connect to database: %v\n", err)
 	} else {
-		log.Printf("\\conninfo: connected to database \"%s\" as user \"%s\"", os.Getenv("DB_NAME_M"), os.Getenv("DB_USER"))
+		log.Printf("\\conninfo: connected to database \"%s\" as user \"%s\"", os.Getenv("DB_NAME_M"), os.Getenv("DB_USER_M"))
 	}
 
 	// init redis

@@ -12,7 +12,7 @@ func InitMovieRouter(router *gin.Engine, dbpool *pgxpool.Pool, rdb *redis.Client
 	mr := repositories.NewMovieRepository(dbpool, rdb)
 	mh := handlers.NewMovieHandler(mr)
 
-	movieRouter := router.Group("api/movies")
+	movieRouter := router.Group("movies")
 
 	{
 		movieRouter.GET("/upcoming", mh.GetUpcomingMovies)
@@ -21,5 +21,6 @@ func InitMovieRouter(router *gin.Engine, dbpool *pgxpool.Pool, rdb *redis.Client
 		movieRouter.GET("/:id", mh.GetMovieDetail)
 		movieRouter.GET("/:id/schedules", mh.HandleGetMovieSchedule)
 		movieRouter.GET("/:id/schedule", mh.HandleGetMovieScheduleFilter)
+		movieRouter.GET("/genres", mh.HandleGenres)
 	}
 }

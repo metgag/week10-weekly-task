@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -105,9 +106,9 @@ func (u *UserRepository) UpdateUserinf(newUserInf models.NewInf, ctx context.Con
 }
 
 func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (models.UserOrder, error) {
-	sql := `
+	query := `
 		SELECT
-			b.id "order_id", u.id "user_id", m.title, s.date, t.time, ct.name, b.is_paid
+			b.id "order_id", u.id "user_id", m.title, s.show_date, t.show_time, ct.cinema_img, b.paid_at
 		FROM
 			orders AS b
 		JOIN
@@ -122,8 +123,9 @@ func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (mo
 			cinema_tayang AS ct ON s.cinema_id = ct.id
 		WHERE
 			u.id = $1
+		ORDER BY b.id DESC
 	`
-	rows, err := u.dbpool.Query(ctx, sql, id)
+	rows, err := u.dbpool.Query(ctx, query, id)
 	if err != nil {
 		return models.UserOrder{}, err
 	}
@@ -132,8 +134,24 @@ func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (mo
 	var histories []models.OrderHistory
 	for rows.Next() {
 		var history models.OrderHistory
-		if err := rows.Scan(&history.OrderID, &history.UserID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.IsPaid); err != nil {
+		var paidAt sql.NullTime
+
+		if err := rows.Scan(
+			&history.OrderID,
+			&history.UserID,
+			&history.Title,
+			&history.Date,
+			&history.Time,
+			&history.CinemaName,
+			&paidAt,
+		); err != nil {
 			return models.UserOrder{}, err
+		}
+
+		if paidAt.Valid {
+			history.PaidAt = &paidAt.Time
+		} else {
+			history.PaidAt = nil
 		}
 
 		seats, err := u.getOrderSeats(ctx, int(history.OrderID))
@@ -144,6 +162,21 @@ func (u *UserRepository) GetUserOrderHistory(ctx context.Context, id uint16) (mo
 
 		histories = append(histories, history)
 	}
+
+	// for rows.Next() {
+	// 	var history models.OrderHistory
+	// 	if err := rows.Scan(&history.OrderID, &history.UserID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.PaidAt); err != nil {
+	// 		return models.UserOrder{}, err
+	// 	}
+
+	// 	seats, err := u.getOrderSeats(ctx, int(history.OrderID))
+	// 	if err != nil {
+	// 		return models.UserOrder{}, err
+	// 	}
+	// 	history.Seats = append(history.Seats, seats...)
+
+	// 	histories = append(histories, history)
+	// }
 
 	return models.UserOrder{UID: uint16(id), OrderHistory: histories}, nil
 }

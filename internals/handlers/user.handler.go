@@ -126,8 +126,9 @@ func (u *UserHandler) HandleUpdateUserInf(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, newUpdateResponse(
-		fmt.Sprintf("updated user w/ ID %d", user.UserID), true, "",
+	ctx.JSON(http.StatusOK, models.NewFullfilledResponse(
+		http.StatusOK,
+		"Profile updated succesfully!",
 	))
 }
 

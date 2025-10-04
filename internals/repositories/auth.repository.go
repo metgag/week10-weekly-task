@@ -23,10 +23,10 @@ func NewAuthRepository(dbpool *pgxpool.Pool, rdb *redis.Client) *AuthRepository 
 	return &AuthRepository{dbpool: dbpool, rdb: rdb}
 }
 
-func (a *AuthRepository) AddNewUser(ctx context.Context, email, password string) (uint16, error) {
+func (a *AuthRepository) AddNewUser(ctx context.Context, email, password string) (string, error) {
 	tx, err := a.dbpool.Begin(ctx)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 	defer tx.Rollback(ctx)
 
@@ -37,20 +37,23 @@ func (a *AuthRepository) AddNewUser(ctx context.Context, email, password string)
 	`
 	var id uint16
 	if err := tx.QueryRow(ctx, sql, email, password).Scan(&id); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	ctag, err := a.initUserProfile(tx, ctx, id)
 	if err != nil {
-		return 0, err
-	} else {
-		if err := tx.Commit(ctx); err != nil {
-			return 0, err
-		}
+		log.Println(err)
+		return "", errors.New("unable to create user's profile")
 	}
-	log.Printf("%s: USER PROFILE", ctag.String())
 
-	return id, nil
+	if ctag.Insert() {
+		if err := tx.Commit(ctx); err != nil {
+			return "", err
+		}
+		return email, nil
+	}
+
+	return "", errors.New("unable to register")
 }
 
 func (a *AuthRepository) GetUser(ctx context.Context, email string) (models.User, error) {

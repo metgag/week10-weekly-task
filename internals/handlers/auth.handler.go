@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,10 +42,13 @@ func (a *AuthHandler) HandleRegister(ctx *gin.Context) {
 	var body = models.Register{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		utils.PrintError("UNABLE TO BIND REGISTER BODY", 8, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server unable to bind request", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE BINDING REGISTER BODY",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -52,24 +56,31 @@ func (a *AuthHandler) HandleRegister(ctx *gin.Context) {
 	p.UseRecommended()
 	encodedHash, err := p.GenerateFromPassword(body.Password)
 	if err != nil {
-		utils.PrintError("UNABLE TO ENCODE PASSWORD", 8, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server error while encode password", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE TO HASH PASSWORD",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
-	id, err := a.ar.AddNewUser(ctx.Request.Context(), body.Email, encodedHash)
+	regisEmail, err := a.ar.AddNewUser(ctx.Request.Context(), body.Email, encodedHash)
 	if err != nil {
-		utils.PrintError("EMAIL ALREADY REGISTERED", 12, err)
-		ctx.JSON(http.StatusConflict, newRegisterResponse(
-			"duplicate email addresses", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"EMAIL ALREADY REGISTERED",
+			"Please log in or use a different email",
+			err,
+			http.StatusConflict,
+		)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, newRegisterResponse(
-		"", true, fmt.Sprintf("register succesfully w/ ID: %d", id),
+	ctx.JSON(http.StatusCreated, models.NewFullfilledResponse(
+		http.StatusCreated,
+		fmt.Sprintf("Succefully registered %s", regisEmail),
 	))
 }
 
@@ -93,51 +104,66 @@ func (a *AuthHandler) HandleLogin(ctx *gin.Context) {
 	var body = models.Login{}
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
-		utils.PrintError("UNABLE TO BIND LOGIN BODY", 8, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server unable to bind request", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE BINDING LOGIN BODY",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	user, err := a.ar.GetUser(ctx.Request.Context(), body.Email)
 	if err != nil {
-		utils.PrintError("NO MATCHING USER", 12, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server unable to get user", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"NO MATCHING USER",
+			"Invalid email or password",
+			err,
+			http.StatusNotFound,
+		)
 		return
 	}
 
 	hc := pkg.NewHashParams()
 	isMatch, err := hc.ComparePasswordAndHash(body.Password, user.Password)
 	if err != nil {
-		utils.PrintError("UNABLE TO COMPARE LOGIN PASSWORD", 8, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server unable to compare password", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE TO COMPARE LOGIN PASSWORD",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 	if !isMatch {
-		utils.PrintError("INVALID CREDENTIALS", 12, nil)
-		ctx.JSON(http.StatusBadRequest, newRegisterResponse(
-			"invalid email or password", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"INVALID LOGIN PASSWORD",
+			"Invalid email or password",
+			errors.New("invalid login password"),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
 	claims := pkg.NewJWTClaims(user.ID, user.Email, user.Password, user.Role)
 	token, err := claims.GenAccessToken()
 	if err != nil {
-		utils.PrintError("FAIL GENERATE ACCESS TOKEN", 12, err)
-		ctx.JSON(http.StatusInternalServerError, newRegisterResponse(
-			"server unable to generate access token", false, "",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE TO GENERATE ACCESS TOKEN",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, newLoginResponse(
-		fmt.Sprintf("%d", claims.UserID), token, true,
+		fmt.Sprintf("Logged in as %s", user.Email), token, true,
 	))
 }
 

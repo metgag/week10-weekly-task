@@ -42,7 +42,7 @@ func (o *OrderHandler) HandleCreateOrder(ctx *gin.Context) {
 	claims, _ := ctx.Get("claims")
 	user, _ := claims.(pkg.Claims)
 
-	var body models.CinemaOrder
+	var body models.CinemaOrderBody
 
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		utils.PrintError("UNABLE TO BIND ORDER BODY", 12, err)

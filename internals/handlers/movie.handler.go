@@ -115,24 +115,31 @@ func newMovieResponse(res models.Movie, success bool, err string) models.MovieRe
 func (m *MovieHandler) GetMovieDetail(ctx *gin.Context) {
 	idParam, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		utils.PrintError("INVALID MOVIE ID", 12, err)
-		ctx.JSON(http.StatusBadRequest, newMovieResponse(
-			models.Movie{}, false, "invalid movie id input",
-		))
+		utils.LogCtxError(
+			ctx,
+			"INVALID MOVIE ID",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	detail, err := m.mr.GetMovieDetail(ctx.Request.Context(), idParam)
 	if err != nil {
-		utils.PrintError(fmt.Sprintf("MOVIE WITH ID %d NOT FOUND", idParam), 6, err)
-		ctx.JSON(http.StatusNotFound, newMovieResponse(
-			models.Movie{}, false, fmt.Sprintf("no movie found with ID %d", idParam),
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE GET MOVIE DETAIL",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, newMovieResponse(
-		detail, true, "",
+	ctx.JSON(http.StatusOK, models.NewFullfilledResponse(
+		http.StatusOK,
+		detail,
 	))
 }
 
@@ -340,20 +347,24 @@ func (m *MovieHandler) HandleMovieWithGenrePageSearch(ctx *gin.Context) {
 
 	movies, err := m.mr.GetMovieWithGenrePageSearch(ctx.Request.Context(), q, genreName, limit, offset)
 	if err != nil {
-		utils.PrintError("UNABLE TO GET MOVIE WITH FILTER", 8, err)
-		ctx.JSON(http.StatusInternalServerError, newMoviesResponse(
-			nil, false, "server unable to get movies data",
-		))
-		return
-	}
-	if len(movies) == 0 {
-		utils.PrintError("NO MATCHING MOVIE WITH FILTER", 8, nil)
-		ctx.JSON(http.StatusInternalServerError, newMoviesResponse(
-			nil, false, "no matching movie data on the server",
-		))
+		utils.LogCtxError(
+			ctx,
+			"UNABLE TO GET MOVIE WITH FILTER",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
+	if len(movies) == 0 {
+		ctx.JSON(http.StatusOK, newMoviesResponse(
+			nil,
+			true,
+			"Nothing here but crickets",
+		))
+		return
+	}
 	ctx.JSON(http.StatusOK, newMoviesResponse(
 		movies, true, "",
 	))
@@ -427,18 +438,24 @@ func (m *MovieHandler) HandleGetMovieScheduleFilter(ctx *gin.Context) {
 		date,
 	)
 	if err != nil {
-		utils.PrintError("ERROR FINDING MOVIE FILTER SCHEDULE", 20, err)
-		ctx.JSON(http.StatusInternalServerError, newMovieScheduleFilterResponse(nil, false, "server error get movie filter schedule"))
-		return
-	}
-	if len(schedules) == 0 {
-		utils.PrintError("NO MATCHING MOVIE FILTER SCHEDULE", 20, nil)
-		ctx.JSON(http.StatusNotFound, newMovieScheduleFilterResponse(
-			[]models.MovieScheduleFilter{}, false, "no matching movie schedule filter",
-		))
+		utils.LogCtxError(
+			ctx,
+			"ERROR GET MOVIE FILTER SCHEDULE",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
+	if len(schedules) == 0 {
+		ctx.JSON(http.StatusOK, newMovieScheduleFilterResponse(
+			nil,
+			true,
+			"No matching movie schedule",
+		))
+		return
+	}
 	ctx.JSON(http.StatusOK, newMovieScheduleFilterResponse(
 		schedules, true, "",
 	))
@@ -529,5 +546,24 @@ func (m *MovieHandler) HandleCreateMovie(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, newCreateMovieResponse(
 		fmt.Sprintf("success create movie w/ ID %d", res), "", true,
+	))
+}
+
+func (m *MovieHandler) HandleGenres(ctx *gin.Context) {
+	genres, err := m.mr.GetGenres(ctx)
+	if err != nil {
+		utils.LogCtxError(
+			ctx,
+			"SERVER UNABLE GET GENRES",
+			"Internal server error",
+			err,
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewFullfilledResponse(
+		http.StatusOK,
+		genres,
 	))
 }

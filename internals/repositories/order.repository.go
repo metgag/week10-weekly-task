@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -45,7 +44,7 @@ func (o *OrderRepository) GetOrderHistories(ctx context.Context) ([]models.Order
 	var histories []models.OrderHistory
 	for rows.Next() {
 		var history models.OrderHistory
-		if err := rows.Scan(&history.OrderID, &history.UserID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.IsPaid); err != nil {
+		if err := rows.Scan(&history.OrderID, &history.UserID, &history.Title, &history.Date, &history.Time, &history.CinemaName, &history.PaidAt); err != nil {
 			return []models.OrderHistory{}, err
 		}
 
@@ -86,30 +85,45 @@ func (o *OrderRepository) getOrderSeats(ctx context.Context, bookId int) ([]stri
 	return seats, nil
 }
 
-func (o *OrderRepository) CreateOrder(ctx context.Context, body models.CinemaOrder, uid uint16, seats ...int) (string, error) {
+func (o *OrderRepository) CreateOrder(ctx context.Context, body models.CinemaOrderBody, uid uint16, seats ...int) (string, error) {
 	tx, err := o.dbpool.Begin(ctx)
 	if err != nil {
 		return "", err
 	}
 	defer tx.Rollback(ctx)
 
-	sql := `
-		INSERT INTO
-			orders (user_id, schedule_id, payment_method, total, is_paid)
-		VALUES
-			($1, $2, $3, $4, $5)
-		RETURNING
-			id
+	var sql string
+	if body.PaidAt == nil {
+		sql = `
+		INSERT INTO orders (user_id, schedule_id, payment_method, total)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
 	`
+	} else if *body.PaidAt {
+		sql = `
+		INSERT INTO orders (user_id, schedule_id, payment_method, total, paid_at)
+		VALUES ($1, $2, $3, $4, NOW())
+		RETURNING id
+	`
+	} else {
+		// explicitly unpaid (false)
+		sql = `
+		INSERT INTO orders (user_id, schedule_id, payment_method, total, paid_at)
+		VALUES ($1, $2, $3, $4, NULL)
+		RETURNING id
+	`
+	}
 
 	var orderId int
-	if err := tx.QueryRow(ctx, sql, uid, body.ScheduleID, body.PaymentMethod, body.Total, body.IsPaid).Scan(&orderId); err != nil {
-		return sql, nil
+	if err := tx.QueryRow(ctx, sql, uid, body.ScheduleID, body.PaymentMethod, body.Total).Scan(&orderId); err != nil {
+		return "", err
 	}
 
 	ctag, err := o.createBookSeats(tx, ctx, orderId, body.Seats)
 	if ctag.Insert() {
-		tx.Commit(ctx)
+		if err := tx.Commit(ctx); err != nil {
+			return "", err
+		}
 		return fmt.Sprintf("%s: CREATE ORDER", ctag.String()), nil
 	}
 
@@ -131,7 +145,7 @@ func (o *OrderRepository) createBookSeats(tx pgx.Tx, ctx context.Context, orderI
 		args = append(args, v)
 	}
 
-	log.Println(sql)
+	// log.Println(sql)
 
 	return tx.Exec(ctx, sql, args...)
 	// return sql

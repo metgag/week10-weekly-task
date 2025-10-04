@@ -51,7 +51,7 @@ func (c *CinemaRepository) GetSchedule(ctx context.Context) ([]models.CinemaSche
 
 func (c *CinemaRepository) GetCinemaNameAndTime(ctx context.Context, scheduleId int) (models.CinemaAndTime, error) {
 	sql := `
-		SELECT ct.name, jt.time, ct.cinema_img
+		SELECT ct.cinema_name, jt.show_time, ct.cinema_img
 		FROM schedule s
 		JOIN cinema_tayang ct ON ct.id = s.cinema_id 
 		JOIN jam_tayang jt ON jt.id = s.time_id

@@ -18,9 +18,9 @@ func InitRouter(dbpool *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
-	r.Static("api/backdrop", "public/backdrop")
-	r.Static("api/poster", "public/poster")
-	r.Static("api/user", "public/user")
+	r.Static("backdrop", "public/backdrop")
+	r.Static("poster", "public/poster")
+	r.Static("user", "public/user")
 
 	InitAuthRouter(r, dbpool, rdb)
 	InitMovieRouter(r, dbpool, rdb)

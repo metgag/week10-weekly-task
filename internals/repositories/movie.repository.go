@@ -28,7 +28,7 @@ func NewMovieRepository(dbpool *pgxpool.Pool, rdb *redis.Client) *MovieRepositor
 func (m *MovieRepository) GetMovieSchedules(ctx context.Context, movieId int) (models.MovieSchedule, error) {
 	sql := `
 		SELECT
-			cs.id, cs.date, t.time, l.location, c.name, c.cinema_img
+			cs.id, cs.show_date, t.show_time, l.show_location, c.cinema_name, c.cinema_img
 		FROM
 			schedule cs
 		JOIN
@@ -75,11 +75,11 @@ func (m *MovieRepository) GetMovieSchedules(ctx context.Context, movieId int) (m
 
 func (m *MovieRepository) GetMovieScheduleFilter(ctx context.Context, movieId, timeId, locationId int, date string) ([]models.MovieScheduleFilter, error) {
 	sql := `
-		SELECT s.id, ct.id, ct.name, ct.cinema_img
+		SELECT s.id, ct.id, ct.cinema_name, ct.cinema_img
 		FROM schedule s
 		JOIN cinema_tayang ct ON ct.id = s.cinema_id
 		WHERE s.movie_id = $1
-		AND s.date = $2
+		AND s.show_date = $2
 		AND s.time_id = $3
 		AND s.location_id = $4
 	`
@@ -294,17 +294,18 @@ func (m *MovieRepository) GetPopularMovies(ctx context.Context) ([]models.MovieF
 
 func (m *MovieRepository) GetUpcomingMovies(ctx context.Context) ([]models.MovieFilter, error) {
 	redisKey := "archie:movies_upcomings"
-	var upcomings []models.MovieFilter
+	var cached []models.MovieFilter
 
-	isExist, err := utils.CacheGet(m.rdb, ctx, redisKey, &upcomings)
+	isExist, err := utils.CacheGet(m.rdb, ctx, redisKey, &cached)
 	if err != nil {
 		utils.PrintError("redis> REDIS ERROR", 20, err)
 	}
 	if isExist {
-		return upcomings, nil
+		return cached, nil
 	}
 
-	upcomings, err = m.GetAllMovies(ctx, `
+	// var upcomings []models.MovieFilter
+	upcomings, err := m.GetAllMovies(ctx, `
 		WHERE release_date + INTERVAL '1 months' > CURRENT_DATE
 	`)
 	if err != nil {
@@ -629,6 +630,13 @@ func (m *MovieRepository) CreateMovie(
 		return 0, err
 	}
 
+	redisKey := "archie:movies_upcomings"
+	res, err := m.rdb.Del(ctx, redisKey).Result()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("Number of keys deleted: %d", res)
+
 	return newMovieID, nil
 }
 
@@ -642,11 +650,11 @@ func (m *MovieRepository) createMovieSchedule(
 ) error {
 	sql := `
 		INSERT INTO 
-			schedule(movie_id, date, time_id, location_id, cinema_id)
+			schedule(movie_id, show_date, time_id, location_id, cinema_id)
 		VALUES
 			($1, $2, $3, $4, $5)
 		ON CONFLICT 
-			(movie_id, date, time_id, location_id, cinema_id)
+			(movie_id, show_date, time_id, location_id, cinema_id)
 		DO NOTHING
 	`
 	for _, tId := range timeId {
@@ -799,4 +807,33 @@ func (m *MovieRepository) insertDirectors(tx pgx.Tx, ctx context.Context, direct
 	}
 
 	return id, nil
+}
+
+func (m *MovieRepository) GetGenres(ctx context.Context) ([]models.Genre, error) {
+	sql := `
+		SELECT id, genre_name
+		FROM genres
+	`
+
+	rows, err := m.dbpool.Query(ctx, sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var genres []models.Genre
+
+	for rows.Next() {
+		var genre models.Genre
+		if err := rows.Scan(
+			&genre.ID,
+			&genre.Name,
+		); err != nil {
+			return nil, err
+		}
+
+		genres = append(genres, genre)
+	}
+
+	return genres, nil
 }
