@@ -79,6 +79,9 @@ type MovieFilter struct {
 	Popularity  float32   `db:"popularity" json:"popularity"`
 	Runtime     uint16    `db:"runtime" json:"runtime"`
 	Genres      []Genre   `db:"genres" json:"genres"`
+	Overview    string    `json:"overview"`
+	Director    string    `json:"director"`
+	Casts       string    `json:"casts"`
 }
 
 type MovieFilterResponse struct {

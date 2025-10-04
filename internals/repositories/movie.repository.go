@@ -113,30 +113,30 @@ func (m *MovieRepository) UpdateMovie(
 	posterPath string,
 	ctx context.Context,
 	id int,
-) (pgconn.CommandTag, error) {
+) error {
 	tx, err := m.dbpool.Begin(ctx)
 	if err != nil {
-		return pgconn.CommandTag{}, err
+		return err
 	}
-
-	rt := reflect.TypeOf(newBody)
-	rv := reflect.ValueOf(newBody)
+	defer tx.Rollback(ctx)
 
 	var setClauses []string
 	var args []any
 	argIndex := 1
+
+	rt := reflect.TypeOf(newBody)
+	rv := reflect.ValueOf(newBody)
 
 	for i := 0; i < rt.NumField(); i++ {
 		field := rt.Field(i)
 		value := rv.Field(i)
 
 		dbTag := field.Tag.Get("db")
-		if dbTag == "" || value.IsZero() {
+		if dbTag == "" || (value.Kind() == reflect.Ptr && value.IsNil()) {
 			continue
 		}
 
-		setClause := fmt.Sprintf("%s = $%d", dbTag, argIndex)
-		setClauses = append(setClauses, setClause)
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", dbTag, argIndex))
 		args = append(args, value.Interface())
 		argIndex++
 	}
@@ -155,11 +155,28 @@ func (m *MovieRepository) UpdateMovie(
 
 	setClauses = append(setClauses, "updated_at = current_timestamp")
 
-	// Final query
 	sql := fmt.Sprintf("UPDATE movies SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIndex)
 	args = append(args, id)
 
-	return tx.Exec(ctx, sql, args...)
+	ctag, err := tx.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+
+	if ctag.RowsAffected() == 0 {
+		return fmt.Errorf("movie with id %d not found", id)
+	}
+
+	redisKeyUpc := "archie:movies_upcomings"
+	redisKeyPop := "archie:movies_populars"
+
+	res, err := m.rdb.Del(ctx, redisKeyPop, redisKeyUpc).Result()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("Number of keys deleted: %d", res)
+
+	return tx.Commit(ctx)
 }
 
 func (m *MovieRepository) GetMovieWithGenrePageSearch(ctx context.Context, q, genreName string, limit, offset int) ([]models.MovieFilter, error) {
@@ -306,7 +323,7 @@ func (m *MovieRepository) GetUpcomingMovies(ctx context.Context) ([]models.Movie
 
 	// var upcomings []models.MovieFilter
 	upcomings, err := m.GetAllMovies(ctx, `
-		WHERE release_date + INTERVAL '1 months' > CURRENT_DATE
+		AND release_date + INTERVAL '1 months' > CURRENT_DATE
 	`)
 	if err != nil {
 		return nil, err
@@ -325,22 +342,31 @@ func (m *MovieRepository) GetUpcomingMovies(ctx context.Context) ([]models.Movie
 func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]models.MovieFilter, error) {
 	sql := `
 		SELECT 
-			id, title, poster_path, release_date, runtime
+			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name, 
+			STRING_AGG(c.name, ', ') casts
 		FROM
-			movies
+			movies m
+		JOIN
+			directors d ON d.id = m.director_id
+		JOIN
+			movies_casts mc ON mc.movie_id = m.id
+		JOIN
+			casts c ON c.id = mc.cast_id
+		WHERE
+			m.deleted_at IS NULL
 	`
+
+	// append additional conditions if provided
 	if opts != "" {
-		sql += opts
-		sql += "AND"
-	} else {
-		sql += "WHERE"
+		sql += " " + opts
 	}
+
 	sql += `
-			deleted_at IS NULL
+		GROUP BY
+			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name
 		ORDER BY
-			id ASC
+			m.id ASC
 	`
-	// utils.PrintError(fmt.Sprintf("MOVIES QUERY\n%s", sql), 20, nil)
 
 	rows, err := m.dbpool.Query(ctx, sql)
 	if err != nil {
@@ -357,6 +383,9 @@ func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]mode
 			&movie.PosterPath,
 			&movie.ReleaseDate,
 			&movie.Runtime,
+			&movie.Overview,
+			&movie.Director,
+			&movie.Casts,
 		); err != nil {
 			return nil, err
 		}
@@ -374,6 +403,72 @@ func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]mode
 
 	return movies, nil
 }
+
+// func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]models.MovieFilter, error) {
+// 	sql := `
+// 		SELECT
+// 			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name, STRING_AGG(
+// 				c.name, ','
+// 			) casts
+// 		FROM
+// 			movies m
+// 		JOIN
+// 			directors d ON d.id = m.director_id
+// 		JOIN
+// 			movies_casts mc ON mc.movie_id = m.id
+// 		JOIN
+// 			casts c ON c.id = mc.cast_id
+// 		GROUP BY
+// 			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name
+// 	`
+// 	if opts != "" {
+// 		sql += opts
+// 		sql += "AND"
+// 	} else {
+// 		sql += "WHERE"
+// 	}
+// 	sql += `
+// 			deleted_at IS NULL
+// 		ORDER BY
+// 			id ASC
+// 	`
+// 	// utils.PrintError(fmt.Sprintf("MOVIES QUERY\n%s", sql), 20, nil)
+
+// 	rows, err := m.dbpool.Query(ctx, sql)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	var movies []models.MovieFilter
+// 	for rows.Next() {
+// 		var movie models.MovieFilter
+// 		if err := rows.Scan(
+// 			&movie.ID,
+// 			&movie.Title,
+// 			&movie.PosterPath,
+// 			&movie.ReleaseDate,
+// 			&movie.Runtime,
+// 			&movie.Overview,
+// 			&movie.Director,
+// 			&movie.Casts,
+// 		); err != nil {
+// 			return nil, err
+// 		}
+
+// 		genres, err := m.fetchGenres(ctx, int(movie.ID))
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		movie.Genres = append(movie.Genres, genres...)
+
+// 		movies = append(movies, movie)
+// 	}
+
+// 	utils.PrintError(fmt.Sprintf("SQL QUERY \n%s", sql), 20, nil)
+
+// 	return movies, nil
+// }
 
 func (m *MovieRepository) GetMovieDetail(ctx context.Context, movieId int) (models.Movie, error) {
 	sql := `

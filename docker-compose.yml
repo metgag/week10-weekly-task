@@ -1,16 +1,16 @@
 services:
   frontend:
-    image: ghcr.io/metgag/loket:fe.v16
+    image: ghcr.io/metgag/loket:fe.v19
     ports:
       - 80:80
     depends_on:
       - backend
   backend:
-    image: ghcr.io/metgag/loket-be:v14
+    image: ghcr.io/metgag/loket-be:v15
     ports:
       - 6011:6011
     volumes:
-      - ./weekly/public:/app/public
+      - /home/metgag/Desktop/ft/mini-task/week-sepuluh/weekly/public:/app/public
       - ./.env:/app/.env
     depends_on:
       - db
@@ -20,7 +20,7 @@ services:
     image: postgres:17.6-alpine3.22
     env_file: ./.env
     volumes:
-      - pg:/var/lib/postgresql/data
+      - pg_final_dat:/var/lib/postgresql/data
     ports:
       - 5433:5432
   redis:
@@ -32,7 +32,7 @@ services:
       - 6379:6379
 
 volumes:
-  pg:
+  pg_final_dat:
     external: true
   redis_dat:
     external: true

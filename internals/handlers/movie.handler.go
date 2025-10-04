@@ -302,19 +302,10 @@ func (m *MovieHandler) HandleMovieUpdate(ctx *gin.Context) {
 	}
 	// log.Println("====================", newBody)
 
-	ctag, err := m.mr.UpdateMovie(newBody, bDropName, posterName, ctx.Request.Context(), idParam)
-	if err != nil {
+	if err := m.mr.UpdateMovie(newBody, bDropName, posterName, ctx.Request.Context(), idParam); err != nil {
 		utils.PrintError("UNABLE TO UPDATE MOVIE TO DB", 8, err)
 		ctx.JSON(http.StatusInternalServerError, newUpdateMovieResponse(
 			false, "", "server unable to update movie",
-		))
-		return
-	}
-
-	if ctag.RowsAffected() == 0 {
-		utils.PrintError("NO MATCHING MOVIE ID TO UPDATE", 8, nil)
-		ctx.JSON(http.StatusInternalServerError, newUpdateMovieResponse(
-			false, "", fmt.Sprintf("no movie w/ ID %d", idParam),
 		))
 		return
 	}
