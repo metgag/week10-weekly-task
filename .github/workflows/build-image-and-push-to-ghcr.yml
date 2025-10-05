@@ -1,0 +1,18 @@
+name: Build and publish Docker Tickitz Backend to ghcr.io
+on: [push]
+
+jobs:
+  tickitz_api_publish:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v5
+
+      - name: Build and publish image
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: loket-be
+          tags: v${{github.run_number}}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}

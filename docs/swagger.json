@@ -1,0 +1,1587 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "RESTful API of tixkitz ticket systeme",
+        "title": "LOKET TIKET",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:6011",
+    "basePath": "/",
+    "paths": {
+        "/admin/movies": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new movie with poster and backdrop upload, genres and casts as JSON arrays.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a new movie",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Movie title",
+                        "name": "title",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Backdrop image file",
+                        "name": "backdrop_path",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Poster image file",
+                        "name": "poster_path",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Release date in YYYY-MM-DD format",
+                        "name": "release_date",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Runtime in minutes",
+                        "name": "runtime",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Movie overview",
+                        "name": "overview",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Director's full name",
+                        "name": "director_name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Popularity score (e.g. 78.5)",
+                        "name": "popularity",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON array of genre IDs as string: [12,14,18]",
+                        "name": "genres",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON array of cast IDs as string: [1,2,3]",
+                        "name": "casts",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully created movie",
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateMovieResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, e.g. invalid input or file upload error",
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateMovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error, e.g. binding failure",
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateMovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies/": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "complete list of movies from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "get all movies (admin)",
+                "responses": {
+                    "200": {
+                        "description": "list of all movies",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/movies/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "soft delete a movie from the database using id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "delete a movie w/ ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movie deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteMovieResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid movie ID format",
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteMovieResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Movie not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteMovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while deleting movie",
+                        "schema": {
+                            "$ref": "#/definitions/models.DeleteMovieResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "update a movie's details",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "update a movie w/ ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID to be updated",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "movie title",
+                        "name": "title",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "movie description",
+                        "name": "overview",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "movie duration (minutes)",
+                        "name": "runtime",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "new backdrop file",
+                        "name": "backdrop_path",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "new poster file",
+                        "name": "poster_path",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "movie updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMovieResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid input or file",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMovieResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "movie not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateMovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Authenticates user by verifying email and password. Returns a JWT access token upon success.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "User login request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Login successful with JWT token",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid email or password",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.LoginResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Logout user with blacklist to redis",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Logout user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.LogoutResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register a new user with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Register new user",
+                "parameters": [
+                    {
+                        "description": "User registration request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Register"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully registered",
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email already registered",
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cinemas/schedules": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all available cinema schedules from the server",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cinemas"
+                ],
+                "summary": "Get cinema schedules",
+                "responses": {
+                    "200": {
+                        "description": "Schedules fetched successfully or no schedules available",
+                        "schema": {
+                            "$ref": "#/definitions/models.ScheduleResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error while fetching the schedule",
+                        "schema": {
+                            "$ref": "#/definitions/models.ScheduleResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cinemas/{schedule_id}/seats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve all available seats for a specific cinema schedule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cinemas"
+                ],
+                "summary": "Get available seats",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "The ID of the cinema schedule",
+                        "name": "schedule_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Available seats retrieved successfully or no seats available",
+                        "schema": {
+                            "$ref": "#/definitions/models.AvailSeatsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid schedule ID format",
+                        "schema": {
+                            "$ref": "#/definitions/models.AvailSeatsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error while fetching available seats",
+                        "schema": {
+                            "$ref": "#/definitions/models.AvailSeatsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get movie with filter by name and genre with pagination",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "pulp",
+                        "description": "search title by q",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "action",
+                        "description": "genre",
+                        "name": "genre",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/popular": {
+            "get": {
+                "description": "get list of movies where popularity higher than 40",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get popular movies handler func",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/upcoming": {
+            "get": {
+                "description": "Get list of movies with release date later than the current date",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "Get upcoming movies",
+                "responses": {
+                    "200": {
+                        "description": "Upcoming movies fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No upcoming movies found",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/{id}": {
+            "get": {
+                "description": "get movie detail based from id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "summary": "get movie detail handler func",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "movie detail data",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "invalid movie id",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "movie not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/{id}/schedule": {
+            "get": {
+                "description": "Retrieve available movie schedules based on movie ID, date, time, and location.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Get movie schedule filter",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by date (YYYY-MM-DD)",
+                        "name": "date",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by time (HHMM in 24h format, e.g. 2030)",
+                        "name": "time",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter by location ID",
+                        "name": "location",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieScheduleFilterResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No matching schedule found",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieScheduleFilterResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieScheduleFilterResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/{id}/schedules": {
+            "get": {
+                "description": "movie schedules (date, time, location, cinema) for a given movie ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "get movie schedules by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Movie ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Schedules retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieSchedulesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.MovieSchedulesResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/orders": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "create a new user's order",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "orders"
+                ],
+                "summary": "create user order handler func",
+                "parameters": [
+                    {
+                        "description": "Order body",
+                        "name": "order",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CinemaOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Order created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized: invalid or missing token",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.OrderResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "get user's profile details",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "get user profile info based from ID",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserinfResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserinfResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserinfResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update user's profile details via multipart form",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user profile info by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "First name",
+                        "name": "first_name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last name",
+                        "name": "last_name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Phone number (e.g., 08667728761)",
+                        "name": "phone_number",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "number",
+                        "description": "User's point (e.g., 4.8)",
+                        "name": "point_count",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Avatar image file",
+                        "name": "avatar",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User profile updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid user ID or no user found",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error while updating profile",
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "get user's order watch histories",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "get user order history info based from ID",
+                "responses": {
+                    "200": {
+                        "description": "User order history retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.HistoryResponse"
+                        }
+                    },
+                    "204": {
+                        "description": "No order history found for user",
+                        "schema": {
+                            "$ref": "#/definitions/models.HistoryResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/models.HistoryResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/models.HistoryResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/password": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "allows user's to update their password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "update user's password",
+                "parameters": [
+                    {
+                        "description": "new password JSON body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PasswordBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "password updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/models.EditPasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "bad request - validation failed or user not found",
+                        "schema": {
+                            "$ref": "#/definitions/models.EditPasswordResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "server error while updating password",
+                        "schema": {
+                            "$ref": "#/definitions/models.EditPasswordResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.AvailSeatsResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Seat"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Cast": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CinemaOrder": {
+            "type": "object",
+            "properties": {
+                "is_paid": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "PayPal"
+                },
+                "schedule_id": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.CinemaSchedule": {
+            "type": "object",
+            "properties": {
+                "cinema_name": {
+                    "type": "string",
+                    "example": "ebv"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string",
+                    "example": "Bogor"
+                },
+                "schedule_id": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                }
+            }
+        },
+        "models.CreateMovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.DeleteMovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "movie w/ ID 1 deleted succesfully"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.EditPasswordResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Genre": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.HistoryResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.UserOrder"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Login": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "foo_bar@mail.com"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "logged in as UID 123"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                }
+            }
+        },
+        "models.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "server error while logout"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "logout succesfully"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Movie": {
+            "type": "object",
+            "properties": {
+                "backdrop_path": {
+                    "type": "string"
+                },
+                "cast": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Cast"
+                    }
+                },
+                "director_name": {
+                    "type": "string",
+                    "example": "Mick Jagger"
+                },
+                "genres": {
+                    "description": "Popularity   *float32  `db:\"popularity\" json:\"popularity\" example:\"17.246\" form:\"popularity\"`",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Genre"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 680
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "poster_path": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string",
+                    "example": "1994-09-10"
+                },
+                "runtime": {
+                    "type": "integer",
+                    "example": 154
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                }
+            }
+        },
+        "models.MovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.Movie"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.MovieSchedule": {
+            "type": "object",
+            "properties": {
+                "movie_id": {
+                    "type": "integer"
+                },
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Schedule"
+                    }
+                }
+            }
+        },
+        "models.MovieScheduleFilter": {
+            "type": "object",
+            "properties": {
+                "cinema_img": {
+                    "type": "string"
+                },
+                "cinema_name": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.MovieScheduleFilterResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MovieScheduleFilter"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.MovieSchedulesResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.MovieSchedule"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.OrderHistory": {
+            "type": "object",
+            "properties": {
+                "cinema_name": {
+                    "type": "string",
+                    "example": "ebv"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_paid": {
+                    "type": "boolean"
+                },
+                "seats": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "time": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Pulp Fiction"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.PasswordBody": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Register": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "ID       uint16 `db:\"id\" json:\"id\"`",
+                    "type": "string",
+                    "example": "foo_bar@mail.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "models.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "server unable to bind request"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "register succesfully w/ ID: 37"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.Schedule": {
+            "type": "object",
+            "properties": {
+                "cinema": {
+                    "type": "string"
+                },
+                "cinema_img": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "schedule_id": {
+                    "type": "integer"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "schedules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.CinemaSchedule"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "models.Seat": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 32
+                },
+                "pos": {
+                    "type": "string",
+                    "example": "C4"
+                }
+            }
+        },
+        "models.UpdateMovieResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string",
+                    "example": "movie w/ ID 1 updated succesfully"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UpdateResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.UserInf": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string",
+                    "example": "08224422765"
+                },
+                "point_count": {
+                    "type": "number",
+                    "example": 4.2
+                },
+                "role": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserOrder": {
+            "type": "object",
+            "properties": {
+                "order_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.OrderHistory"
+                    }
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.UserinfResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/models.UserInf"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

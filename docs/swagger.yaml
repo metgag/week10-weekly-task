@@ -1,0 +1,1044 @@
+basePath: /
+definitions:
+  models.AvailSeatsResponse:
+    properties:
+      error:
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/models.Seat'
+        type: array
+      success:
+        type: boolean
+    type: object
+  models.Cast:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.CinemaOrder:
+    properties:
+      is_paid:
+        example: false
+        type: boolean
+      payment_method:
+        example: PayPal
+        type: string
+      schedule_id:
+        example: 12
+        type: integer
+      seats:
+        items:
+          type: integer
+        type: array
+      total:
+        example: 30
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  models.CinemaSchedule:
+    properties:
+      cinema_name:
+        example: ebv
+        type: string
+      date:
+        type: string
+      location:
+        example: Bogor
+        type: string
+      schedule_id:
+        type: integer
+      time:
+        type: string
+      title:
+        example: Pulp Fiction
+        type: string
+    type: object
+  models.CreateMovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.DeleteMovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        example: movie w/ ID 1 deleted succesfully
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.EditPasswordResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Genre:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  models.HistoryResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.UserOrder'
+      success:
+        type: boolean
+    type: object
+  models.Login:
+    properties:
+      email:
+        example: foo_bar@mail.com
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LoginResponse:
+    properties:
+      message:
+        example: logged in as UID 123
+        type: string
+      success:
+        type: boolean
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+        type: string
+    type: object
+  models.LogoutResponse:
+    properties:
+      error:
+        example: server error while logout
+        type: string
+      result:
+        example: logout succesfully
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Movie:
+    properties:
+      backdrop_path:
+        type: string
+      cast:
+        items:
+          $ref: '#/definitions/models.Cast'
+        type: array
+      director_name:
+        example: Mick Jagger
+        type: string
+      genres:
+        description: Popularity   *float32  `db:"popularity" json:"popularity" example:"17.246"
+          form:"popularity"`
+        items:
+          $ref: '#/definitions/models.Genre'
+        type: array
+      id:
+        example: 680
+        type: integer
+      overview:
+        type: string
+      poster_path:
+        type: string
+      release_date:
+        example: "1994-09-10"
+        type: string
+      runtime:
+        example: 154
+        type: integer
+      title:
+        example: Pulp Fiction
+        type: string
+    type: object
+  models.MovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.Movie'
+      success:
+        type: boolean
+    type: object
+  models.MovieSchedule:
+    properties:
+      movie_id:
+        type: integer
+      schedule:
+        items:
+          $ref: '#/definitions/models.Schedule'
+        type: array
+    type: object
+  models.MovieScheduleFilter:
+    properties:
+      cinema_img:
+        type: string
+      cinema_name:
+        type: string
+      schedule_id:
+        type: integer
+    type: object
+  models.MovieScheduleFilterResponse:
+    properties:
+      error:
+        type: string
+      result:
+        items:
+          $ref: '#/definitions/models.MovieScheduleFilter'
+        type: array
+      success:
+        type: boolean
+    type: object
+  models.MovieSchedulesResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.MovieSchedule'
+      success:
+        type: boolean
+    type: object
+  models.OrderHistory:
+    properties:
+      cinema_name:
+        example: ebv
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      is_paid:
+        type: boolean
+      seats:
+        items:
+          type: string
+        type: array
+      time:
+        type: string
+      title:
+        example: Pulp Fiction
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.OrderResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.PasswordBody:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  models.Register:
+    properties:
+      email:
+        description: ID       uint16 `db:"id" json:"id"`
+        example: foo_bar@mail.com
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.RegisterResponse:
+    properties:
+      message:
+        example: server unable to bind request
+        type: string
+      result:
+        example: 'register succesfully w/ ID: 37'
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.Schedule:
+    properties:
+      cinema:
+        type: string
+      cinema_img:
+        type: string
+      date:
+        type: string
+      location:
+        type: string
+      schedule_id:
+        type: integer
+      time:
+        type: string
+    type: object
+  models.ScheduleResponse:
+    properties:
+      message:
+        type: string
+      schedules:
+        items:
+          $ref: '#/definitions/models.CinemaSchedule'
+        type: array
+      success:
+        example: true
+        type: boolean
+    type: object
+  models.Seat:
+    properties:
+      id:
+        example: 32
+        type: integer
+      pos:
+        example: C4
+        type: string
+    type: object
+  models.UpdateMovieResponse:
+    properties:
+      error:
+        type: string
+      result:
+        example: movie w/ ID 1 updated succesfully
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.UpdateResponse:
+    properties:
+      error:
+        type: string
+      result:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.UserInf:
+    properties:
+      avatar:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        example: "08224422765"
+        type: string
+      point_count:
+        example: 4.2
+        type: number
+      role:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.UserOrder:
+    properties:
+      order_history:
+        items:
+          $ref: '#/definitions/models.OrderHistory'
+        type: array
+      user_id:
+        type: integer
+    type: object
+  models.UserinfResponse:
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/models.UserInf'
+      success:
+        type: boolean
+    type: object
+host: localhost:6011
+info:
+  contact: {}
+  description: RESTful API of tixkitz ticket systeme
+  title: LOKET TIKET
+  version: "1.0"
+paths:
+  /admin/movies:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new movie with poster and backdrop upload, genres and
+        casts as JSON arrays.
+      parameters:
+      - description: Movie ID
+        in: formData
+        name: id
+        required: true
+        type: integer
+      - description: Movie title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Backdrop image file
+        in: formData
+        name: backdrop_path
+        type: file
+      - description: Poster image file
+        in: formData
+        name: poster_path
+        type: file
+      - description: Release date in YYYY-MM-DD format
+        in: formData
+        name: release_date
+        required: true
+        type: string
+      - description: Runtime in minutes
+        in: formData
+        name: runtime
+        type: integer
+      - description: Movie overview
+        in: formData
+        name: overview
+        type: string
+      - description: Director's full name
+        in: formData
+        name: director_name
+        required: true
+        type: string
+      - description: Popularity score (e.g. 78.5)
+        in: formData
+        name: popularity
+        required: true
+        type: number
+      - description: 'JSON array of genre IDs as string: [12,14,18]'
+        in: formData
+        name: genres
+        type: string
+      - description: 'JSON array of cast IDs as string: [1,2,3]'
+        in: formData
+        name: casts
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully created movie
+          schema:
+            $ref: '#/definitions/models.CreateMovieResponse'
+        "400":
+          description: Bad request, e.g. invalid input or file upload error
+          schema:
+            $ref: '#/definitions/models.CreateMovieResponse'
+        "500":
+          description: Internal server error, e.g. binding failure
+          schema:
+            $ref: '#/definitions/models.CreateMovieResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new movie
+      tags:
+      - admin
+  /admin/movies/:
+    get:
+      consumes:
+      - application/json
+      description: complete list of movies from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: list of all movies
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      security:
+      - BearerAuth: []
+      summary: get all movies (admin)
+      tags:
+      - admin
+  /admin/movies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: soft delete a movie from the database using id
+      parameters:
+      - description: movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movie deleted successfully
+          schema:
+            $ref: '#/definitions/models.DeleteMovieResponse'
+        "400":
+          description: Invalid movie ID format
+          schema:
+            $ref: '#/definitions/models.DeleteMovieResponse'
+        "404":
+          description: Movie not found
+          schema:
+            $ref: '#/definitions/models.DeleteMovieResponse'
+        "500":
+          description: Server error while deleting movie
+          schema:
+            $ref: '#/definitions/models.DeleteMovieResponse'
+      security:
+      - BearerAuth: []
+      summary: delete a movie w/ ID
+      tags:
+      - admin
+    patch:
+      consumes:
+      - multipart/form-data
+      description: update a movie's details
+      parameters:
+      - description: movie ID to be updated
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: movie title
+        in: formData
+        name: title
+        type: string
+      - description: movie description
+        in: formData
+        name: overview
+        type: string
+      - description: movie duration (minutes)
+        in: formData
+        name: runtime
+        type: integer
+      - description: new backdrop file
+        in: formData
+        name: backdrop_path
+        type: file
+      - description: new poster file
+        in: formData
+        name: poster_path
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: movie updated successfully
+          schema:
+            $ref: '#/definitions/models.UpdateMovieResponse'
+        "400":
+          description: invalid input or file
+          schema:
+            $ref: '#/definitions/models.UpdateMovieResponse'
+        "404":
+          description: movie not found
+          schema:
+            $ref: '#/definitions/models.UpdateMovieResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/models.UpdateMovieResponse'
+      security:
+      - BearerAuth: []
+      summary: update a movie w/ ID
+      tags:
+      - admin
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user by verifying email and password. Returns a JWT
+        access token upon success.
+      parameters:
+      - description: User login request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful with JWT token
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+      summary: User login
+      tags:
+      - auth
+  /auth/logout:
+    delete:
+      consumes:
+      - application/json
+      description: Logout user with blacklist to redis
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LogoutResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully registered
+          schema:
+            $ref: '#/definitions/models.RegisterResponse'
+        "409":
+          description: Email already registered
+          schema:
+            $ref: '#/definitions/models.RegisterResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.RegisterResponse'
+      summary: Register new user
+      tags:
+      - auth
+  /cinemas/{schedule_id}/seats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all available seats for a specific cinema schedule
+      parameters:
+      - description: The ID of the cinema schedule
+        in: path
+        name: schedule_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Available seats retrieved successfully or no seats available
+          schema:
+            $ref: '#/definitions/models.AvailSeatsResponse'
+        "400":
+          description: Invalid schedule ID format
+          schema:
+            $ref: '#/definitions/models.AvailSeatsResponse'
+        "500":
+          description: Internal server error while fetching available seats
+          schema:
+            $ref: '#/definitions/models.AvailSeatsResponse'
+      security:
+      - BearerAuth: []
+      summary: Get available seats
+      tags:
+      - cinemas
+  /cinemas/schedules:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all available cinema schedules from the server
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedules fetched successfully or no schedules available
+          schema:
+            $ref: '#/definitions/models.ScheduleResponse'
+        "500":
+          description: Internal server error while fetching the schedule
+          schema:
+            $ref: '#/definitions/models.ScheduleResponse'
+      security:
+      - BearerAuth: []
+      summary: Get cinema schedules
+      tags:
+      - cinemas
+  /movies/:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: search title by q
+        example: pulp
+        in: query
+        name: q
+        type: string
+      - description: page number
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: genre
+        example: action
+        in: query
+        name: genre
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get movie with filter by name and genre with pagination
+      tags:
+      - movies
+  /movies/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get movie detail based from id
+      parameters:
+      - description: movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: movie detail data
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "400":
+          description: invalid movie id
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "404":
+          description: movie not found
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get movie detail handler func
+      tags:
+      - movies
+  /movies/{id}/schedule:
+    get:
+      description: Retrieve available movie schedules based on movie ID, date, time,
+        and location.
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Filter by date (YYYY-MM-DD)
+        in: query
+        name: date
+        required: true
+        type: string
+      - description: Filter by time (HHMM in 24h format, e.g. 2030)
+        in: query
+        name: time
+        required: true
+        type: integer
+      - description: Filter by location ID
+        in: query
+        name: location
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieScheduleFilterResponse'
+        "404":
+          description: No matching schedule found
+          schema:
+            $ref: '#/definitions/models.MovieScheduleFilterResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.MovieScheduleFilterResponse'
+      summary: Get movie schedule filter
+      tags:
+      - schedule
+  /movies/{id}/schedules:
+    get:
+      description: movie schedules (date, time, location, cinema) for a given movie
+        ID
+      parameters:
+      - description: Movie ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Schedules retrieved successfully
+          schema:
+            $ref: '#/definitions/models.MovieSchedulesResponse'
+        "500":
+          description: server error
+          schema:
+            $ref: '#/definitions/models.MovieSchedulesResponse'
+      summary: get movie schedules by ID
+      tags:
+      - schedule
+  /movies/popular:
+    get:
+      consumes:
+      - application/json
+      description: get list of movies where popularity higher than 40
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "500":
+          description: internal server error
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: get popular movies handler func
+      tags:
+      - movies
+  /movies/upcoming:
+    get:
+      consumes:
+      - application/json
+      description: Get list of movies with release date later than the current date
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Upcoming movies fetched successfully
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "404":
+          description: No upcoming movies found
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.MovieResponse'
+      summary: Get upcoming movies
+      tags:
+      - movies
+  /orders:
+    post:
+      consumes:
+      - application/json
+      description: create a new user's order
+      parameters:
+      - description: Order body
+        in: body
+        name: order
+        required: true
+        schema:
+          $ref: '#/definitions/models.CinemaOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Order created successfully
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+        "401":
+          description: 'Unauthorized: invalid or missing token'
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.OrderResponse'
+      security:
+      - BearerAuth: []
+      summary: create user order handler func
+      tags:
+      - orders
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: get user's profile details
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            $ref: '#/definitions/models.UserinfResponse'
+        "401":
+          description: Unauthorized or invalid token
+          schema:
+            $ref: '#/definitions/models.UserinfResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.UserinfResponse'
+      security:
+      - BearerAuth: []
+      summary: get user profile info based from ID
+      tags:
+      - users
+    patch:
+      consumes:
+      - multipart/form-data
+      description: Update user's profile details via multipart form
+      parameters:
+      - description: First name
+        in: formData
+        name: first_name
+        type: string
+      - description: Last name
+        in: formData
+        name: last_name
+        type: string
+      - description: Phone number (e.g., 08667728761)
+        in: formData
+        name: phone_number
+        type: string
+      - description: User's point (e.g., 4.8)
+        in: formData
+        name: point_count
+        type: number
+      - description: Avatar image file
+        in: formData
+        name: avatar
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile updated successfully
+          schema:
+            $ref: '#/definitions/models.UpdateResponse'
+        "400":
+          description: Invalid user ID or no user found
+          schema:
+            $ref: '#/definitions/models.UpdateResponse'
+        "500":
+          description: Server error while updating profile
+          schema:
+            $ref: '#/definitions/models.UpdateResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile info by ID
+      tags:
+      - users
+  /users/orders:
+    get:
+      consumes:
+      - application/json
+      description: get user's order watch histories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User order history retrieved successfully
+          schema:
+            $ref: '#/definitions/models.HistoryResponse'
+        "204":
+          description: No order history found for user
+          schema:
+            $ref: '#/definitions/models.HistoryResponse'
+        "401":
+          description: Unauthorized or invalid token
+          schema:
+            $ref: '#/definitions/models.HistoryResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.HistoryResponse'
+      security:
+      - BearerAuth: []
+      summary: get user order history info based from ID
+      tags:
+      - users
+  /users/password:
+    patch:
+      consumes:
+      - application/json
+      description: allows user's to update their password
+      parameters:
+      - description: new password JSON body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.PasswordBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: password updated successfully
+          schema:
+            $ref: '#/definitions/models.EditPasswordResponse'
+        "400":
+          description: bad request - validation failed or user not found
+          schema:
+            $ref: '#/definitions/models.EditPasswordResponse'
+        "500":
+          description: server error while updating password
+          schema:
+            $ref: '#/definitions/models.EditPasswordResponse'
+      security:
+      - BearerAuth: []
+      summary: update user's password
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
