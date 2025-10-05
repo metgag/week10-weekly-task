@@ -20,8 +20,6 @@ This project includes **struct validation**, **JWT authentication**, **argon2 pa
 
 ## 🌐 Environment Variables
 
-Copy `.env.example` to `.env` and fill in your configuration:
-
 ```env
 # PostgreSQL
 DB_URL_M=postgres://<PG_USER>:<PG_PASSWORD>@<PG_HOST>:<PG_PORT>/<PG_DATABASE>
