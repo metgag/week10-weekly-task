@@ -107,6 +107,89 @@ func (m *MovieRepository) GetMovieScheduleFilter(ctx context.Context, movieId, t
 	return schedules, nil
 }
 
+func (m *MovieRepository) updateMovieCasts(tx pgx.Tx, ctx context.Context, movieID uint32, newCastsCSV string) error {
+	// Normalize new casts
+	newCasts := []string{}
+	for _, c := range strings.Split(newCastsCSV, ",") {
+		name := strings.TrimSpace(c)
+		if name != "" {
+			newCasts = append(newCasts, name)
+		}
+	}
+
+	// Get existing casts linked to movie
+	rows, err := tx.Query(ctx, `
+        SELECT c.name
+        FROM movies_casts mc
+        JOIN casts c ON mc.cast_id = c.id
+        WHERE mc.movie_id = $1
+    `, movieID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	oldCasts := make(map[string]bool)
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return err
+		}
+		oldCasts[name] = true
+	}
+
+	// Build sets
+	newSet := make(map[string]bool)
+	for _, n := range newCasts {
+		newSet[n] = true
+	}
+
+	// Remove old casts not in new list
+	for old := range oldCasts {
+		if !newSet[old] {
+			if _, err := tx.Exec(ctx, `
+                DELETE FROM movies_casts 
+                WHERE movie_id = $1 
+                  AND cast_id = (SELECT id FROM casts WHERE name = $2)
+            `, movieID, old); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Add new casts not in old list
+	for _, n := range newCasts {
+		if !oldCasts[n] {
+			var castID uint32
+			sqlC := `
+                WITH ins AS (
+                    INSERT INTO casts(name)
+                    VALUES ($1)
+                    ON CONFLICT (name) DO NOTHING
+                    RETURNING id
+                )
+                SELECT id FROM ins
+                UNION
+                SELECT id FROM casts WHERE name = $1
+                LIMIT 1
+            `
+			if err := tx.QueryRow(ctx, sqlC, n).Scan(&castID); err != nil {
+				return err
+			}
+
+			_, err := tx.Exec(ctx, `
+                INSERT INTO movies_casts(movie_id, cast_id)
+                VALUES ($1, $2)
+            `, movieID, castID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (m *MovieRepository) UpdateMovie(
 	newBody models.MovieBody,
 	backdropPath string,
@@ -124,6 +207,18 @@ func (m *MovieRepository) UpdateMovie(
 	var args []any
 	argIndex := 1
 
+	// Resolve director_id first if DirectorName is given
+	if newBody.DirectorName != nil && *newBody.DirectorName != "" {
+		directorId, err := m.insertDirectors(tx, ctx, *newBody.DirectorName)
+		if err != nil {
+			return err
+		}
+		setClauses = append(setClauses, fmt.Sprintf("director_id = $%d", argIndex))
+		args = append(args, directorId)
+		argIndex++
+	}
+
+	// Reflection loop for normal fields
 	rt := reflect.TypeOf(newBody)
 	rv := reflect.ValueOf(newBody)
 
@@ -136,25 +231,32 @@ func (m *MovieRepository) UpdateMovie(
 			continue
 		}
 
+		// Skip director_id if DirectorName already handled
+		if dbTag == "director_id" && newBody.DirectorName != nil {
+			continue
+		}
+
 		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", dbTag, argIndex))
 		args = append(args, value.Interface())
 		argIndex++
 	}
 
+	// Poster / backdrop
 	if posterPath != "" {
 		setClauses = append(setClauses, fmt.Sprintf("poster_path = $%d", argIndex))
 		args = append(args, posterPath)
 		argIndex++
 	}
-
 	if backdropPath != "" {
 		setClauses = append(setClauses, fmt.Sprintf("backdrop_path = $%d", argIndex))
 		args = append(args, backdropPath)
 		argIndex++
 	}
 
+	// Always update timestamp
 	setClauses = append(setClauses, "updated_at = current_timestamp")
 
+	// Build final update
 	sql := fmt.Sprintf("UPDATE movies SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIndex)
 	args = append(args, id)
 
@@ -162,14 +264,35 @@ func (m *MovieRepository) UpdateMovie(
 	if err != nil {
 		return err
 	}
-
 	if ctag.RowsAffected() == 0 {
 		return fmt.Errorf("movie with id %d not found", id)
 	}
 
+	// Genres update
+	if newBody.Genres != nil {
+		_, err := tx.Exec(ctx, "DELETE FROM movies_genres WHERE movie_id = $1", id)
+		if err != nil {
+			return err
+		}
+		if _, err := m.insertMovieGenres(tx, ctx, uint32(id), *newBody.Genres); err != nil {
+			return err
+		}
+	}
+
+	// Casts update
+	if newBody.Casts != nil {
+		_, err := tx.Exec(ctx, "DELETE FROM movies_casts WHERE movie_id = $1", id)
+		if err != nil {
+			return err
+		}
+		if err := m.insertMovieCasts(tx, ctx, uint32(id), *newBody.Casts); err != nil {
+			return err
+		}
+	}
+
+	// Bust redis caches
 	redisKeyUpc := "archie:movies_upcomings"
 	redisKeyPop := "archie:movies_populars"
-
 	res, err := m.rdb.Del(ctx, redisKeyPop, redisKeyUpc).Result()
 	if err != nil {
 		log.Println(err)
@@ -178,6 +301,107 @@ func (m *MovieRepository) UpdateMovie(
 
 	return tx.Commit(ctx)
 }
+
+// 	// tx, err := m.dbpool.Begin(ctx)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// defer tx.Rollback(ctx)
+
+// 	// var setClauses []string
+// 	// var args []any
+// 	// argIndex := 1
+
+// 	// rt := reflect.TypeOf(newBody)
+// 	// rv := reflect.ValueOf(newBody)
+
+// 	// for i := 0; i < rt.NumField(); i++ {
+// 	// 	field := rt.Field(i)
+// 	// 	value := rv.Field(i)
+
+// 	// 	dbTag := field.Tag.Get("db")
+// 	// 	if dbTag == "" || (value.Kind() == reflect.Ptr && value.IsNil()) {
+// 	// 		continue
+// 	// 	}
+
+// 	// 	setClauses = append(setClauses, fmt.Sprintf("%s = $%d", dbTag, argIndex))
+// 	// 	args = append(args, value.Interface())
+// 	// 	argIndex++
+// 	// }
+
+// 	// if posterPath != "" {
+// 	// 	setClauses = append(setClauses, fmt.Sprintf("poster_path = $%d", argIndex))
+// 	// 	args = append(args, posterPath)
+// 	// 	argIndex++
+// 	// }
+
+// 	// if backdropPath != "" {
+// 	// 	setClauses = append(setClauses, fmt.Sprintf("backdrop_path = $%d", argIndex))
+// 	// 	args = append(args, backdropPath)
+// 	// 	argIndex++
+// 	// }
+
+// 	// setClauses = append(setClauses, "updated_at = current_timestamp")
+
+// 	// sql := fmt.Sprintf("UPDATE movies SET %s WHERE id = $%d", strings.Join(setClauses, ", "), argIndex)
+// 	// args = append(args, id)
+
+// 	// ctag, err := tx.Exec(ctx, sql, args...)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+
+// 	// if ctag.RowsAffected() == 0 {
+// 	// 	return fmt.Errorf("movie with id %d not found", id)
+// 	// }
+
+// 	// if newBody.DirectorName != nil && *newBody.DirectorName != "" {
+// 	// 	directorId, err := m.insertDirectors(tx, ctx, *newBody.DirectorName)
+// 	// 	if err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// 	_, err = tx.Exec(ctx,
+// 	// 		"UPDATE movies SET director_id = $1 WHERE id = $2",
+// 	// 		directorId, id,
+// 	// 	)
+// 	// 	if err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// }
+
+// 	// // Handle genres
+// 	// if newBody.Genres != nil {
+// 	// 	_, err := tx.Exec(ctx, "DELETE FROM movies_genres WHERE movie_id = $1", id)
+// 	// 	if err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// 	if _, err := m.insertMovieGenres(tx, ctx, uint32(id), *newBody.Genres); err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// }
+
+// 	// // Handle casts
+// 	// if newBody.Casts != nil {
+// 	// 	_, err := tx.Exec(ctx, "DELETE FROM movies_casts WHERE movie_id = $1", id)
+// 	// 	if err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// 	if err := m.insertMovieCasts(tx, ctx, uint32(id), *newBody.Casts); err != nil {
+// 	// 		return err
+// 	// 	}
+// 	// }
+
+// 	// redisKeyUpc := "archie:movies_upcomings"
+// 	// redisKeyPop := "archie:movies_populars"
+
+// 	// res, err := m.rdb.Del(ctx, redisKeyPop, redisKeyUpc).Result()
+// 	// if err != nil {
+// 	// 	log.Println(err)
+// 	// }
+// 	// log.Printf("Number of keys deleted: %d", res)
+
+// 	// return tx.Commit(ctx)
+// }
 
 func (m *MovieRepository) GetMovieWithGenrePageSearch(ctx context.Context, q, genreName string, limit, offset int) ([]models.MovieFilter, error) {
 	baseSQL := `
@@ -243,11 +467,18 @@ func (m *MovieRepository) SoftDeleteMovie(ctx context.Context, movieId int) (pgc
 		UPDATE 
 			movies
 		SET
-			is_deleted = true,
-			deleted_at = current_timestamp
+			deleted_at = now()
 		WHERE
 			id = $1
 	`
+
+	redisKeyUpc := "archie:movies_upcomings"
+	redisKeyPop := "archie:movies_populars"
+	res, err := m.rdb.Del(ctx, redisKeyPop, redisKeyUpc).Result()
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("Number of keys deleted: %d", res)
 
 	return m.dbpool.Exec(ctx, sql, movieId)
 }
@@ -403,72 +634,6 @@ func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]mode
 
 	return movies, nil
 }
-
-// func (m *MovieRepository) GetAllMovies(ctx context.Context, opts string) ([]models.MovieFilter, error) {
-// 	sql := `
-// 		SELECT
-// 			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name, STRING_AGG(
-// 				c.name, ','
-// 			) casts
-// 		FROM
-// 			movies m
-// 		JOIN
-// 			directors d ON d.id = m.director_id
-// 		JOIN
-// 			movies_casts mc ON mc.movie_id = m.id
-// 		JOIN
-// 			casts c ON c.id = mc.cast_id
-// 		GROUP BY
-// 			m.id, m.title, m.poster_path, m.release_date, m.runtime, m.overview, d.name
-// 	`
-// 	if opts != "" {
-// 		sql += opts
-// 		sql += "AND"
-// 	} else {
-// 		sql += "WHERE"
-// 	}
-// 	sql += `
-// 			deleted_at IS NULL
-// 		ORDER BY
-// 			id ASC
-// 	`
-// 	// utils.PrintError(fmt.Sprintf("MOVIES QUERY\n%s", sql), 20, nil)
-
-// 	rows, err := m.dbpool.Query(ctx, sql)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	var movies []models.MovieFilter
-// 	for rows.Next() {
-// 		var movie models.MovieFilter
-// 		if err := rows.Scan(
-// 			&movie.ID,
-// 			&movie.Title,
-// 			&movie.PosterPath,
-// 			&movie.ReleaseDate,
-// 			&movie.Runtime,
-// 			&movie.Overview,
-// 			&movie.Director,
-// 			&movie.Casts,
-// 		); err != nil {
-// 			return nil, err
-// 		}
-
-// 		genres, err := m.fetchGenres(ctx, int(movie.ID))
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		movie.Genres = append(movie.Genres, genres...)
-
-// 		movies = append(movies, movie)
-// 	}
-
-// 	utils.PrintError(fmt.Sprintf("SQL QUERY \n%s", sql), 20, nil)
-
-// 	return movies, nil
-// }
 
 func (m *MovieRepository) GetMovieDetail(ctx context.Context, movieId int) (models.Movie, error) {
 	sql := `
@@ -699,8 +864,6 @@ func (m *MovieRepository) CreateMovie(
 		strings.Join(placeholders, ", "),
 	)
 
-	// log.Println("Executing SQL:", sql)
-
 	var newMovieID uint32
 	if err := tx.QueryRow(ctx, sql, args...).Scan(&newMovieID); err != nil {
 		return 0, err
@@ -711,7 +874,6 @@ func (m *MovieRepository) CreateMovie(
 		return 0, err
 	}
 	// insert casts
-	// log.Printf("Insert casts for movieID %d: %s", newMovieID, body.Casts)
 	log.Println(body.Casts)
 	if err := m.insertMovieCasts(tx, ctx, newMovieID, body.Casts); err != nil {
 		return 0, err
@@ -719,7 +881,6 @@ func (m *MovieRepository) CreateMovie(
 	if err := m.createMovieSchedule(tx, ctx, newMovieID, body.ScheduleDate, body.LocationID, body.TimeID); err != nil {
 		return 0, err
 	}
-	// log.Println("Insert casts succeeded")
 
 	if err := tx.Commit(ctx); err != nil {
 		return 0, err
@@ -785,50 +946,81 @@ func (m *MovieRepository) sliceCinemaID(locationId int) []int {
 	}
 }
 
-// func (m* MovieRepository) createMovieLocationSchedule(
-// 	tx pgx.Tx,
-// 	ctx context.Context,
-// ) {
-// 	sql := `
-
-// 	`
-// }
-
 func (m *MovieRepository) insertMovieCasts(tx pgx.Tx, ctx context.Context, movieID uint32, castCSV string) error {
-	castStrs := strings.SplitSeq(castCSV, ",")
+	if strings.TrimSpace(castCSV) == "" {
+		return nil
+	}
 
+	castStrs := strings.SplitSeq(castCSV, ",")
 	for str := range castStrs {
+		str = strings.TrimSpace(str)
+		if str == "" {
+			continue
+		}
+
 		sqlC := `
-			WITH inse AS (
-			INSERT INTO casts(name)
-			VALUES ($1)
-			ON CONFLICT (name) DO NOTHING
-			RETURNING id
-			)
-			SELECT id FROM inse
-			UNION
-			SELECT id FROM casts WHERE name = $1
-			LIMIT 1;
-		`
-		var castID uint16
+            WITH ins AS (
+                INSERT INTO casts(name)
+                VALUES ($1)
+                ON CONFLICT (name) DO NOTHING
+                RETURNING id
+            )
+            SELECT id FROM ins
+            UNION
+            SELECT id FROM casts WHERE name = $1
+            LIMIT 1;
+        `
+		var castID uint32
 		if err := tx.QueryRow(ctx, sqlC, str).Scan(&castID); err != nil {
 			return err
 		}
 
 		sqlMC := `
-			INSERT INTO
-				movies_casts(movie_id, cast_id)
-			VALUES
-				($1, $2)
-		`
-
-		_, err := tx.Exec(ctx, sqlMC, movieID, castID)
-		if err != nil {
+            INSERT INTO movies_casts(movie_id, cast_id)
+            VALUES ($1, $2)
+        `
+		if _, err := tx.Exec(ctx, sqlMC, movieID, castID); err != nil {
 			return err
 		}
 	}
 	return nil
 }
+
+// func (m *MovieRepository) insertMovieCasts(tx pgx.Tx, ctx context.Context, movieID uint32, castCSV string) error {
+// 	castStrs := strings.SplitSeq(castCSV, ",")
+
+// 	for str := range castStrs {
+// 		sqlC := `
+// 			WITH inse AS (
+// 			INSERT INTO casts(name)
+// 			VALUES ($1)
+// 			ON CONFLICT (name) DO NOTHING
+// 			RETURNING id
+// 			)
+// 			SELECT id FROM inse
+// 			UNION
+// 			SELECT id FROM casts WHERE name = $1
+// 			LIMIT 1;
+// 		`
+// 		var castID uint16
+// 		if err := tx.QueryRow(ctx, sqlC, str).Scan(&castID); err != nil {
+// 			return err
+// 		}
+
+// 		sqlMC := `
+// 			INSERT INTO
+// 				movies_casts(movie_id, cast_id)
+// 			VALUES
+// 				($1, $2)
+// 		`
+
+// 		_, err := tx.Exec(ctx, sqlMC, movieID, castID)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 func (m *MovieRepository) insertMovieGenres(tx pgx.Tx, ctx context.Context, movieID uint32, genreCSV string) (pgconn.CommandTag, error) {
 	if strings.TrimSpace(genreCSV) == "" {

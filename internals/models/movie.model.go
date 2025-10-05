@@ -20,15 +20,30 @@ type Movie struct {
 }
 
 type MovieBody struct {
-	Title       *string               `form:"title" db:"title"`
-	Overview    *string               `form:"overview" db:"overview"`
-	Runtime     *uint16               `form:"runtime" db:"runtime"`
-	ReleaseDate *string               `form:"release_date" db:"release_date"` // parse ke time.Time
-	Popularity  *float32              `form:"popularity" db:"popularity"`
-	DirectorID  *uint32               `form:"director_id" db:"director_id"`
-	NewBackdrop *multipart.FileHeader `form:"backdrop_path"`
-	NewPoster   *multipart.FileHeader `form:"poster_path"`
+	Title       *string  `form:"title" db:"title"`
+	Overview    *string  `form:"overview" db:"overview"`
+	Runtime     *uint16  `form:"runtime" db:"runtime"`
+	ReleaseDate *string  `form:"release_date" db:"release_date"`
+	Popularity  *float32 `form:"popularity" db:"popularity"`
+	// keep DirectorID if you want to update by ID directly
+	DirectorID   *uint32               `form:"director_id" db:"director_id"`
+	DirectorName *string               `form:"director_name"` // <-- NEW
+	Casts        *string               `form:"casts"`         // CSV: "Tom Hanks, Leonardo DiCaprio"
+	Genres       *string               `form:"genres"`        // CSV: "Drama, Thriller"
+	NewBackdrop  *multipart.FileHeader `form:"backdrop_path"`
+	NewPoster    *multipart.FileHeader `form:"poster_path"`
 }
+
+// type MovieBody struct {
+// 	Title       *string               `form:"title" db:"title"`
+// 	Overview    *string               `form:"overview" db:"overview"`
+// 	Runtime     *uint16               `form:"runtime" db:"runtime"`
+// 	ReleaseDate *string               `form:"release_date" db:"release_date"` // parse ke time.Time
+// 	Popularity  *float32              `form:"popularity" db:"popularity"`
+// 	DirectorID  *uint32               `form:"director_id" db:"director_id"`
+// 	NewBackdrop *multipart.FileHeader `form:"backdrop_path"`
+// 	NewPoster   *multipart.FileHeader `form:"poster_path"`
+// }
 
 // type MovieBody struct {
 // 	Title       string                `form:"title"`

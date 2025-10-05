@@ -94,7 +94,7 @@ func (c *CinemaRepository) GetAvailSeats(ctx context.Context, scheduleId int) ([
 		FROM 
 			seats AS s
 		WHERE 
-			s.id NOT IN (
+			s.id IN (
 				SELECT bs.seat_id
 				FROM orders_seats bs
 				JOIN orders bt ON bs.order_id = bt.id

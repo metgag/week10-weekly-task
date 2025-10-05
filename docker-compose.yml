@@ -1,12 +1,12 @@
 services:
   frontend:
-    image: ghcr.io/metgag/loket:fe.v19
+    image: ghcr.io/metgag/loket:fe.v20
     ports:
       - 80:80
     depends_on:
       - backend
   backend:
-    image: ghcr.io/metgag/loket-be:v15
+    image: ghcr.io/metgag/loket-be:v16
     ports:
       - 6011:6011
     volumes:
