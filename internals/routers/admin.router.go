@@ -17,10 +17,10 @@ func InitAdminRouter(router *gin.Engine, dbpool *pgxpool.Pool, rdb *redis.Client
 	mh := handlers.NewMovieHandler(mr)
 
 	adminGroup := router.Group("/admin")
-	// adminGroup.Use(
-	// 	middlewares.ValidateToken,
-	// 	middlewares.Access("admin"),
-	// )
+	adminGroup.Use(
+		middlewares.ValidateToken(rdb),
+		middlewares.Access("admin"),
+	)
 
 	adminGroup.GET("/orders",
 		middlewares.ValidateToken(rdb),
